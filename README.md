@@ -1,6 +1,7 @@
 # Gothic Multiplayer Launcher + SystemPack
 
-Gothic games fixes
+This project modernizes the SystemPack for Gothic 2 NotR and also includes optional injection for the Gothic Multiplayer Mod (GMP).
+It can also be extended to inject the D3D11 renderer while keeping the original DirectX-7 renderer in place.
 
 ## Building
 This project was built and tested with VS2026 (v145 Platform Toolset + Windows SDK 10.0.26100.0).  
@@ -15,36 +16,8 @@ You will need C++ MFC for x64/x86 (Latest MSVC) and C++/CLI Support (Latest MSVC
    Open `Vdfs32g\lib\ogg\win32\VS2015\libogg.sln` with Visual Studio and build libogg.  
    Output: `Vdfs32g\lib\ogg\win32\VS2015\Win32\Release\libogg.lib`
 3. Next we want to build vorbis.
-   We need to make sure that it can find our compiled libogg.lib.
-   Go to `Vdfs32g\lib\vorbis\win32\VS2010` and update the file `libogg.props` to:
-```xml
-<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup Label="UserMacros">
-    <LIBOGG_VERSION>1.3.6</LIBOGG_VERSION>
-  </PropertyGroup>
-  <PropertyGroup>
-    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
-  </PropertyGroup>
-  <ItemDefinitionGroup>
-    <ClCompile>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\..\..\ogg\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <RuntimeLibrary Condition="'$(Configuration)'=='Debug'">MultiThreadedDebug</RuntimeLibrary>
-      <RuntimeLibrary Condition="'$(Configuration)'=='Release'">MultiThreaded</RuntimeLibrary>
-      <AdditionalOptions Condition="'$(Configuration)'=='Debug'">/MTd %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalOptions Condition="'$(Configuration)'=='Release'">/MT %(AdditionalOptions)</AdditionalOptions>
-    </ClCompile>
-    <Link>
-      <AdditionalLibraryDirectories>$(SolutionDir)..\..\..\ogg\win32\VS2015\$(PlatformName)\$(ConfigurationName)</AdditionalLibraryDirectories>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemGroup>
-    <BuildMacro Include="LIBOGG_VERSION">
-      <Value>$(LIBOGG_VERSION)</Value>
-    </BuildMacro>
-  </ItemGroup>
-</Project>
-```
+   We need to make sure that it can find our compiled libogg.lib.  
+   Go to `Vdfs32g\lib\vorbis\win32\VS2010` and replace the file `libogg.props` with the one from [Vdfs32g\lib](Vdfs32g\lib\libogg.props)
 4. Open `Vdfs32g\lib\vorbis\win32\VS2010\vorbis_static.sln` with Visual Studio and build libvorbis_static and libvorbisfile.  
    Output: `Vdfs32g\lib\vorbis\win32\VS2010\Win32\Release\libvorbis_static.lib`
    and `Vdfs32g\lib\vorbis\win32\VS2010\Win32\Release\libvorbisfile_static.lib`
