@@ -1,21 +1,20 @@
 #ifndef _VDFS_
 #define _VDFS_
 
-class Vdfs : public Object
+class Vdfs final : public Object
 {
 protected:
 	CRITICAL_SECTION CS;
 
-	VdfsIndexPtr		Index;
+	VdfsIndexPtr Index;
 
-	IFS*				PhysicalFlow;
-	ObjectArray<IfsPtr>	VirtualFlows;
+	IFS* PhysicalFlow;
+	ObjectArray<IfsPtr> VirtualFlows;
 
 	ObjectArray<IfsFilterPtr> Filters;
 
-	AString	LastError;
+	AString LastError;
 
-protected:
 	void EnumDirs(const TCHAR* dir, TStringArray& dirs, bool recurse);
 	void MountDir(const TCHAR* dir, const TCHAR* ext);
 
@@ -27,18 +26,28 @@ public:
 	virtual IfsBase* OpenFile(const char* filename, long flags);
 	virtual void CloseFile(IfsBase* fp);
 
-	virtual void SetLastError(const char* text) { EnterCriticalSection(&CS); LastError = text; LeaveCriticalSection(&CS); };
-	virtual void GetLastError(char* text) { EnterCriticalSection(&CS); strncpy(text, LastError.GetData(), LastError.Length()); text[LastError.Length()] = '\0'; LeaveCriticalSection(&CS); };
+	virtual void SetLastError(const char* text)
+	{
+		EnterCriticalSection(&CS);
+		LastError = text;
+		LeaveCriticalSection(&CS);
+	};
 
-public:
+	virtual void GetLastError(char* text)
+	{
+		EnterCriticalSection(&CS);
+		strncpy(text, LastError.GetData(), LastError.Length());
+		text[LastError.Length()] = '\0';
+		LeaveCriticalSection(&CS);
+	};
+
 	virtual bool UpdateStdFileIndex(const AString& file, uInt size);
-	virtual bool InitVirtual(void);
-	virtual bool Init(void);
-	virtual void Clear(void); 
+	virtual bool InitVirtual();
+	virtual bool Init();
+	virtual void Clear();
 
-public:
-	Vdfs(void);
-	virtual ~Vdfs(void);
+	Vdfs();
+	~Vdfs() override;
 };
 
 #endif

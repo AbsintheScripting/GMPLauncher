@@ -6,7 +6,8 @@
 #include <d3d9.h>
 #pragma comment(lib, "d3d9.lib")
 
-void RedirectIOToConsole(void)
+// Allocate a console and redirect stdin/stdout/stderr for debug output
+void RedirectIOToConsole()
 {
 	CONSOLE_SCREEN_BUFFER_INFO coninfo;
 
@@ -23,33 +24,35 @@ void RedirectIOToConsole(void)
 	coninfo.dwSize.Y = 50;
 	SetConsoleScreenBufferSize(GetStdHandle(STD_OUTPUT_HANDLE), coninfo.dwSize);
 
-	setvbuf(stdout, NULL, _IONBF, 0);
-	setvbuf(stderr, NULL, _IONBF, 0);
+	setvbuf(stdout, nullptr, _IONBF, 0);
+	setvbuf(stderr, nullptr, _IONBF, 0);
 }
 
-bool GetModuleFileNameString(HMODULE hModule, TString& name)
+// Get the full module file name, handling buffer reallocation
+bool GetModuleFileNameString(const HMODULE hModule, TString& name)
 {
 	SetLastError(ERROR_INSUFFICIENT_BUFFER);
-	for(uInt i = 1; GetLastError() == ERROR_INSUFFICIENT_BUFFER; i++)
+	for (uInt i = 1; GetLastError() == ERROR_INSUFFICIENT_BUFFER; i++)
 	{
 		name.Resize(i * MAX_PATH);
 		SetLastError(0);
-		if(!GetModuleFileName(hModule, (TCHAR*)name.GetData(), i * MAX_PATH))
+		if (!GetModuleFileName(hModule, (TCHAR*)name.GetData(), i * MAX_PATH))
 			return false;
 	}
 	return (name.Length() != 0);
 }
 
-HWND hGothicWindow = NULL;
+HWND hGothicWindow = nullptr;
 
-BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam)
+// Window enumeration callback: finds the Gothic game window by class name
+BOOL CALLBACK EnumWindowsProc(const HWND hWnd, LPARAM lParam)
 {
 	DWORD ProcID = 0;
 	GetWindowThreadProcessId(hWnd, &ProcID);
-	if(ProcID == GetCurrentProcessId())
+	if (ProcID == GetCurrentProcessId())
 	{
 		TCHAR Text[256];
-		if(GetClassName(hWnd, Text, 256) && !_tcscmp(Text, _T("DDWndClass")))
+		if (GetClassName(hWnd, Text, 256) && !_tcscmp(Text, _T("DDWndClass")))
 		{
 			hGothicWindow = hWnd;
 			return FALSE;
@@ -58,6 +61,7 @@ BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam)
 	return TRUE;
 }
 
+// Get the Gothic game window resolution from Gothic.ini VIDEO settings
 bool GetGothicWindowSize(POINT& size)
 {
 	size.x = size.y = 0;
@@ -86,10 +90,11 @@ bool GetGothicWindowSize(POINT& size)
 	return (size.x && size.y);
 }
 
-bool IsVdfs(void)
+// Check if the current executable is the vdfs32.dll itself (loaded as DLL)
+bool IsVdfs()
 {
 	TString ExeName;
-	if(GetModuleFileNameString(GetModuleHandle(NULL), ExeName))
+	if (GetModuleFileNameString(GetModuleHandle(nullptr), ExeName))
 	{
 		ExeName.TruncateBeforeLast(_T("\\"));
 		return ExeName.Compare(_T("vdfs32"), true, 6);
@@ -97,10 +102,11 @@ bool IsVdfs(void)
 	return false;
 }
 
-bool IsSpacer(void)
+// Check if the current executable is spacer.exe (Gothic 2 Nrt)
+bool IsSpacer()
 {
 	TString ExeName;
-	if(GetModuleFileNameString(GetModuleHandle(NULL), ExeName))
+	if (GetModuleFileNameString(GetModuleHandle(nullptr), ExeName))
 	{
 		ExeName.TruncateBeforeLast(_T("\\"));
 		return ExeName.Compare(_T("spacer"), true, 6);
@@ -108,24 +114,25 @@ bool IsSpacer(void)
 	return false;
 }
 
-static bool		ExeCrcReaded = false;
-static uLong	ExeCrc = 0;
+static bool ExeCrcReaded = false;
+static uLong ExeCrc = 0;
 
-uLong GetExeCrc32(void)
+// Compute and cache CRC32 of the entire executable file
+uLong GetExeCrc32()
 {
-	if(!ExeCrcReaded)
+	if (!ExeCrcReaded)
 	{
 		ExeCrc = 0;
 
 		TString ExeName;
-		if(GetModuleFileNameString(NULL, ExeName))
+		if (GetModuleFileNameString(nullptr, ExeName))
 		{
 			FILE* fp = _tfopen(ExeName, _T("rb"));
-			if(fp)
+			if (fp)
 			{
 				uChar Buffer[1024];
 				size_t size = 0;
-				while(size = fread(Buffer, 1, 1024, fp))
+				while (size = fread(Buffer, 1, 1024, fp))
 					ExeCrc = Crc32(Buffer, size, ExeCrc);
 				ExeCrcReaded = true;
 				fclose(fp);
@@ -136,72 +143,74 @@ uLong GetExeCrc32(void)
 	return ExeCrc;
 }
 
+// Get the address and size of a PE section by name
 const uChar* GetSectionAddress(const uChar* codeBase, const char* name, size_t& size)
 {
 	size_t namelen = strlen(name);
-	if(namelen > 8)
-		return NULL;
+	if (namelen > 8)
+		return nullptr;
 
-	PIMAGE_DOS_HEADER dos_header = (PIMAGE_DOS_HEADER)codeBase;
-	if(dos_header->e_magic != IMAGE_DOS_SIGNATURE) 
-		return 0;
+	auto dos_header = (PIMAGE_DOS_HEADER)codeBase;
+	if (dos_header->e_magic != IMAGE_DOS_SIGNATURE)
+		return nullptr;
 
-	PIMAGE_NT_HEADERS headers = (PIMAGE_NT_HEADERS)&((uChar*)dos_header)[dos_header->e_lfanew];
-	PIMAGE_SECTION_HEADER section = IMAGE_FIRST_SECTION(headers);
-	for(int i = 0; i < headers->FileHeader.NumberOfSections; i++, section++) 
+	auto headers = (PIMAGE_NT_HEADERS)&((uChar*)dos_header)[dos_header->e_lfanew];
+	auto section = IMAGE_FIRST_SECTION(headers);
+	for (int i = 0; i < headers->FileHeader.NumberOfSections; i++, section++)
 	{
-		if(!memcmp(section->Name, name, namelen))
+		if (!memcmp(section->Name, name, namelen))
 		{
 			size = section->SizeOfRawData;
 			return codeBase + section->PointerToRawData;
 		}
 	}
-	return NULL;
+	return nullptr;
 }
 
+// Compute CRC32 of a named PE section from the executable file
 uLong GetSectionCrc32(const char* name)
 {
 	uLong Result = 0;
 
 	size_t namelen = strlen(name);
-	if(namelen > 8)
+	if (namelen > 8)
 		return Result;
 
 	TString ExeName;
-	if(GetModuleFileNameString(NULL, ExeName))
+	if (GetModuleFileNameString(nullptr, ExeName))
 	{
 		FILE* fp = _tfopen(ExeName, _T("rb"));
-		if(fp)
+		if (fp)
 		{
 			fseek(fp, 0, SEEK_END);
 			long size = ftell(fp);
 			fseek(fp, 0, SEEK_SET);
 
-			if(!size)
+			if (!size)
 			{
 				fclose(fp);
 				return Result;
 			}
 
-			uChar* Buffer = new uChar[size];
+			auto Buffer = new uChar[size];
 			size = fread(Buffer, 1, size, fp);
 			fclose(fp);
 
-			if(size)
+			if (size)
 			{
 				const uChar* codeBase = Buffer;
 
-				PIMAGE_DOS_HEADER dos_header = (PIMAGE_DOS_HEADER)codeBase;
-				if(dos_header->e_magic != IMAGE_DOS_SIGNATURE) 
+				auto dos_header = (PIMAGE_DOS_HEADER)codeBase;
+				if (dos_header->e_magic != IMAGE_DOS_SIGNATURE)
 					return 0;
 
-				PIMAGE_NT_HEADERS headers = (PIMAGE_NT_HEADERS)&((uChar*)dos_header)[dos_header->e_lfanew];
-				PIMAGE_SECTION_HEADER section = IMAGE_FIRST_SECTION(headers);
-				for(int i = 0; i < headers->FileHeader.NumberOfSections; i++, section++) 
+				auto headers = (PIMAGE_NT_HEADERS)&((uChar*)dos_header)[dos_header->e_lfanew];
+				auto section = IMAGE_FIRST_SECTION(headers);
+				for (int i = 0; i < headers->FileHeader.NumberOfSections; i++, section++)
 				{
-					if(!memcmp(section->Name, name, namelen))
+					if (!memcmp(section->Name, name, namelen))
 					{
-						if(section->SizeOfRawData != 0)
+						if (section->SizeOfRawData != 0)
 							Result = Crc32(codeBase + section->PointerToRawData, section->SizeOfRawData);
 						break;
 					}
@@ -213,18 +222,19 @@ uLong GetSectionCrc32(const char* name)
 	return Result;
 }
 
-bool HasVgaVendor(DWORD ven)
+// Check if any detected GPU adapter belongs to VGA vendor ID
+bool HasVgaVendor(const DWORD ven)
 {
 	bool Result = false;
 	IDirect3D9* D3D = Direct3DCreate9(D3D_SDK_VERSION);
-	if(D3D)
+	if (D3D)
 	{
-		for(UINT i = 0; i < D3D->GetAdapterCount(); i++)
+		for (UINT i = 0; i < D3D->GetAdapterCount(); i++)
 		{
 			D3DADAPTER_IDENTIFIER9 Adapter;
-			if(SUCCEEDED(D3D->GetAdapterIdentifier(i, 0, &Adapter)))
+			if (SUCCEEDED(D3D->GetAdapterIdentifier(i, 0, &Adapter)))
 			{
-				if(Adapter.VendorId == ven)
+				if (Adapter.VendorId == ven)
 				{
 					Result = true;
 					break;
@@ -236,14 +246,15 @@ bool HasVgaVendor(DWORD ven)
 	return Result;
 }
 
-bool Patch(uChar* data, size_t size, uChar* org, uChar* patch)
+// Patch a memory region: verify optional original bytes, then overwrite with new bytes
+bool Patch(uChar* data, const size_t size, uChar* org, uChar* patch)
 {
 	bool Result = false;
 
 	DWORD OldProtect = 0;
-	if(VirtualProtect(data, size, PAGE_READWRITE, &OldProtect))
+	if (VirtualProtect(data, size, PAGE_READWRITE, &OldProtect))
 	{
-		if(!org || !memcmp(data, org, size))
+		if (!org || !memcmp(data, org, size))
 		{
 			memcpy(data, patch, size);
 			Result = true;
@@ -251,7 +262,7 @@ bool Patch(uChar* data, size_t size, uChar* org, uChar* patch)
 		else
 		{
 			RedirectIOToConsole();
-			for(size_t i = 0; i < size; i++)
+			for (size_t i = 0; i < size; i++)
 				printf("0x%X(%c), ", data[i], data[i]);
 		}
 		VirtualProtect(data, 5, OldProtect, &OldProtect);
@@ -260,82 +271,110 @@ bool Patch(uChar* data, size_t size, uChar* org, uChar* patch)
 	return Result;
 }
 
+// Get the total image size from the PE optional header
 DWORD GetImportSize(const uChar* codeBase)
 {
-	PIMAGE_DOS_HEADER dos_header = (PIMAGE_DOS_HEADER)codeBase;
-	if(dos_header->e_magic != IMAGE_DOS_SIGNATURE) 
+	auto dos_header = (PIMAGE_DOS_HEADER)codeBase;
+	if (dos_header->e_magic != IMAGE_DOS_SIGNATURE)
 		return 0;
 
-	PIMAGE_NT_HEADERS old_header = (PIMAGE_NT_HEADERS)&codeBase[dos_header->e_lfanew];
+	auto old_header = (PIMAGE_NT_HEADERS)&codeBase[dos_header->e_lfanew];
 	if (old_header->Signature != IMAGE_NT_SIGNATURE)
 		return 0;
 
 	return old_header->OptionalHeader.SizeOfImage;
 }
 
+// Get the import descriptor for a specific DLL by name
 PIMAGE_IMPORT_DESCRIPTOR GetImportDescriptor(const uChar* codeBase, const char* name)
 {
-	PIMAGE_DOS_HEADER dos_header = (PIMAGE_DOS_HEADER)codeBase;
-	if(dos_header->e_magic != IMAGE_DOS_SIGNATURE) 
-		return NULL;
+	auto dos_header = (PIMAGE_DOS_HEADER)codeBase;
+	if (dos_header->e_magic != IMAGE_DOS_SIGNATURE)
+		return nullptr;
 
-	PIMAGE_NT_HEADERS old_header = (PIMAGE_NT_HEADERS)&codeBase[dos_header->e_lfanew];
+	auto old_header = (PIMAGE_NT_HEADERS)&codeBase[dos_header->e_lfanew];
 	if (old_header->Signature != IMAGE_NT_SIGNATURE)
-		return NULL;
+		return nullptr;
 
 	PIMAGE_DATA_DIRECTORY directory = &old_header->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT];
-	if (directory->Size > 0) 
+	if (directory->Size > 0)
 	{
-		PIMAGE_IMPORT_DESCRIPTOR importDesc = (PIMAGE_IMPORT_DESCRIPTOR) (codeBase + directory->VirtualAddress);
-		for (; !IsBadReadPtr(importDesc, sizeof(IMAGE_IMPORT_DESCRIPTOR)) && importDesc->Name; importDesc++) 
+		auto importDesc = (PIMAGE_IMPORT_DESCRIPTOR)(codeBase + directory->VirtualAddress);
+		for (; !IsBadReadPtr(importDesc, sizeof(IMAGE_IMPORT_DESCRIPTOR)) && importDesc->Name; importDesc++)
 		{
-			LPCSTR Name = (LPCSTR)(codeBase + importDesc->Name);
-			if(!_stricmp(Name, name))
+			auto Name = (LPCSTR)(codeBase + importDesc->Name);
+			if (!_stricmp(Name, name))
 				return importDesc;
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
-FARPROC* GetImportFunctionAddress(const uChar* codeBase, PIMAGE_IMPORT_DESCRIPTOR importDesc, bool ordinal, const char* name)
+// Get a pointer to the import function address entry in the IAT
+FARPROC* GetImportFunctionAddress(const uChar* codeBase,
+                                  const PIMAGE_IMPORT_DESCRIPTOR importDesc,
+                                  const bool ordinal,
+                                  const char* name)
 {
-	DWORD* thunkRef = NULL;
-	FARPROC* funcRef = NULL;
+	DWORD* thunkRef = nullptr;
+	FARPROC* funcRef = nullptr;
 
-	if(importDesc->OriginalFirstThunk) 
+	if (importDesc->OriginalFirstThunk)
 	{
 		thunkRef = (DWORD*)(codeBase + importDesc->OriginalFirstThunk);
 		funcRef = (FARPROC*)(codeBase + importDesc->FirstThunk);
-	} 
-	else 
+	}
+	else
 	{
 		// no hint table
 		thunkRef = (DWORD*)(codeBase + importDesc->FirstThunk);
 		funcRef = (FARPROC*)(codeBase + importDesc->FirstThunk);
 	}
 
-	for(; *thunkRef; thunkRef++, funcRef++) 
+	for (; *thunkRef; thunkRef++, funcRef++)
 	{
-		if(IMAGE_SNAP_BY_ORDINAL(*thunkRef)) 
+		if (IMAGE_SNAP_BY_ORDINAL(*thunkRef))
 		{
-			if(ordinal)
+			if (ordinal)
 			{
-				LPCSTR FuncOrdinal = (LPCSTR)IMAGE_ORDINAL(*thunkRef);
-				if(FuncOrdinal == name)
+				auto FuncOrdinal = (LPCSTR)IMAGE_ORDINAL(*thunkRef);
+				if (FuncOrdinal == name)
 					return funcRef;
 			}
-		} 
+		}
 		else
 		{
-			if(!ordinal)
+			if (!ordinal)
 			{
-				PIMAGE_IMPORT_BY_NAME thunkData = (PIMAGE_IMPORT_BY_NAME)(codeBase + (*thunkRef));
-				if(!_stricmp((LPCSTR)&thunkData->Name, name))
+				auto thunkData = (PIMAGE_IMPORT_BY_NAME)(codeBase + (*thunkRef));
+				if (!_stricmp((LPCSTR)&thunkData->Name, name))
 					return funcRef;
 			}
 		}
 	}
 
-	return NULL;
+	return nullptr;
+}
+
+// Helper template: patch a specific import function address in the IAT
+template <typename T>
+bool PatchImportFunctionAddress(uChar* codeBase,
+                                const PIMAGE_IMPORT_DESCRIPTOR importDesc,
+                                const bool ordinal,
+                                const char* name,
+                                T newFunc)
+{
+	FARPROC* funcAddr = GetImportFunctionAddress(codeBase, importDesc, ordinal, name);
+	if (funcAddr)
+	{
+		DWORD OldProtect;
+		if (VirtualProtect(funcAddr, sizeof(FARPROC), PAGE_READWRITE, &OldProtect))
+		{
+			*funcAddr = static_cast<FARPROC>(newFunc);
+			VirtualProtect(funcAddr, sizeof(FARPROC), OldProtect, &OldProtect);
+			return true;
+		}
+	}
+	return false;
 }

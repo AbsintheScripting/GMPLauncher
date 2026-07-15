@@ -1,7 +1,7 @@
 #ifndef _BINK_FIX_
 #define _BINK_FIX_
 
-extern bool InstallBinkFix(void);
-extern void RemoveBinkFix(void);
+extern bool InstallBinkFix();
+extern void RemoveBinkFix();
 
 #endif

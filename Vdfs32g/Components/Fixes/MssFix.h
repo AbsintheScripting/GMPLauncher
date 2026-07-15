@@ -1,7 +1,7 @@
 #ifndef _MSS_FIX_
 #define _MSS_FIX_
 
-extern bool InstallMssFix(void);
-extern void RemoveMssFix(void);
+extern bool InstallMssFix();
+extern void RemoveMssFix();
 
 #endif

@@ -1,10 +1,10 @@
 #include "PreCompiled.h"
 
-OggFilter* OggFilter::GetFreeStream(void)
+OggFilter* OggFilter::GetFreeStream()
 {
-	for(uInt i = 0; i < Streams.Size(); i++)
+	for (uInt i = 0; i < Streams.Size(); i++)
 	{
-		if(!Streams[i]->Source)
+		if (!Streams[i]->Source)
 			return Streams[i];
 	}
 	return Streams.Add(new OggFilter());
@@ -13,27 +13,27 @@ OggFilter* OggFilter::GetFreeStream(void)
 IfsFilter* OggFilter::Open(IFS* src)
 {
 	TString Ext(src->GetName());
-	if(!Ext.TruncateBeforeLast(_T(".")) || (!Ext.Compare(_T("WAV")) && !Ext.Compare(_T("OGG"))))
-		return NULL;
+	if (!Ext.TruncateBeforeLast(_T(".")) || (!Ext.Compare(_T("WAV")) && !Ext.Compare(_T("OGG"))))
+		return nullptr;
 
 	src->SetOffset(0);
 
 	uChar Buffer[4];
-	if((src->GetData(Buffer, 4) == 4) && !memcmp(Buffer, "OggS", 4))
+	if ((src->GetData(Buffer, 4) == 4) && !memcmp(Buffer, "OggS", 4))
 	{
 		src->SetOffset(0);
 		OggFilter* Res = GetFreeStream();
-		if(Res->Attach(src))
+		if (Res->Attach(src))
 			return Res;
 	}
 
 	src->SetOffset(0);
-	return NULL;
+	return nullptr;
 }
 
 bool OggFilter::Attach(IFS* src)
 {
-	if(!ov_open_callbacks((void*)src, &Vorbis, NULL, 0, Callbacks) && (ov_streams(&Vorbis) == 1))
+	if (!ov_open_callbacks(src, &Vorbis, nullptr, 0, Callbacks) && (ov_streams(&Vorbis) == 1))
 	{
 		Source = src;
 
@@ -43,7 +43,7 @@ bool OggFilter::Attach(IFS* src)
 		Wave.Format.SamplesPerSec = info->rate;
 		Wave.Format.BlockAlign = Wave.Format.Channels * Wave.Format.BitsPerSample / 8;
 		Wave.Format.AvgBytesPerSec = Wave.Format.SamplesPerSec * Wave.Format.BlockAlign;
-		Wave.dataChunk.ChunkSize = (uInt)ov_pcm_total(&Vorbis, -1) * Wave.Format.BlockAlign;
+		Wave.dataChunk.ChunkSize = static_cast<uInt>(ov_pcm_total(&Vorbis, -1)) * Wave.Format.BlockAlign;
 		Wave.Header.RiffSize = Wave.dataChunk.ChunkSize + sizeof(WaveFile) - 8;
 
 		Offset = 0;
@@ -53,32 +53,32 @@ bool OggFilter::Attach(IFS* src)
 	return false;
 }
 
-uLong OggFilter::GetFileSize(void) const
+uLong OggFilter::GetFileSize() const
 {
 	return Wave.Header.RiffSize + 8;
 }
 
-uLong OggFilter::GetOffset(void) const
+uLong OggFilter::GetOffset() const
 {
 	return Offset;
 }
 
-bool OggFilter::SetOffset(uLong offset)
+bool OggFilter::SetOffset(const uLong offset)
 {
-	if(offset > GetFileSize())
+	if (offset > GetFileSize())
 		return false;
 	Offset = offset;
 	return true;
 }
 
-uLong OggFilter::GetData(void* buffer, uLong size)
+uLong OggFilter::GetData(void* buffer, const uLong size)
 {
-	char* Buffer = (char*)buffer;
+	auto Buffer = static_cast<char*>(buffer);
 	uLong Size = size;
-	if(Offset < sizeof(WaveFile))
+	if (Offset < sizeof(WaveFile))
 	{
 		size_t ToRead = sizeof(WaveFile) - Offset;
-		if(size < ToRead)
+		if (size < ToRead)
 			ToRead = size;
 
 		memcpy(buffer, &Wave, ToRead);
@@ -88,19 +88,19 @@ uLong OggFilter::GetData(void* buffer, uLong size)
 		Offset += ToRead;
 	}
 
-	if(Size)
+	if (Size)
 	{
 		uInt Part = (Offset - sizeof(WaveFile)) % Wave.Format.BlockAlign;
-		if(Part)
+		if (Part)
 		{
 			Buffer = new char[size + Part];
 			Offset -= Part;
 			Size += Part;
 		}
 
-		if(ov_pcm_seek(&Vorbis, (Offset - sizeof(WaveFile)) / Wave.Format.BlockAlign))
+		if (ov_pcm_seek(&Vorbis, (Offset - sizeof(WaveFile)) / Wave.Format.BlockAlign))
 		{
-			if(Part)
+			if (Part)
 				delete[] Buffer;
 			return 0;
 		}
@@ -108,12 +108,12 @@ uLong OggFilter::GetData(void* buffer, uLong size)
 		int default_stream = -1;
 
 		uInt Readed = 0;
-		while(Readed < Size)
+		while (Readed < Size)
 		{
 			int res = ov_read(&Vorbis, &Buffer[Readed], Size - Readed, 0, 2, 1, &default_stream);
-			if(res <= 0)
+			if (res <= 0)
 			{
-				if(Part)
+				if (Part)
 				{
 					memcpy(buffer, &Buffer[Part], Readed - Part);
 					delete[] Buffer;
@@ -124,62 +124,62 @@ uLong OggFilter::GetData(void* buffer, uLong size)
 			Offset += res;
 		}
 
-		if(Part)
+		if (Part)
 		{
-			memcpy(&((uChar*)buffer)[size - Size], &Buffer[Part], size);
+			memcpy(&static_cast<uChar*>(buffer)[size - Size], &Buffer[Part], size);
 			delete[] Buffer;
 		}
 	}
 	return size;
 }
 
-void OggFilter::Close(void)
+void OggFilter::Close()
 {
-	if(Vorbis.datasource)
+	if (Vorbis.datasource)
 		ov_clear(&Vorbis);
 	memset(&Vorbis, 0, sizeof(OggVorbis_File));
 
-	if(Source)
+	if (Source)
 	{
 		Source->Close();
-		Source = NULL;
+		Source = nullptr;
 	}
 }
 
-size_t vorbis_read(void* ptr, size_t size, size_t nmemb, void* datasource)
+size_t vorbis_read(void* ptr, const size_t size, size_t nmemb, void* datasource)
 {
-	IFS* FS = (IFS*)datasource;
+	auto FS = static_cast<IFS*>(datasource);
 	size_t ActualSize = size * nmemb;
 
-	size_t MaxReadSize = (size_t)(FS->GetFileSize() - FS->GetOffset());
-	if(ActualSize > MaxReadSize)
+	size_t MaxReadSize = static_cast<size_t>(FS->GetFileSize() - FS->GetOffset());
+	if (ActualSize > MaxReadSize)
 	{
 		nmemb = MaxReadSize / size;
 		ActualSize = size * nmemb;
 	}
 
-	if(FS->GetData(ptr, ActualSize) == ActualSize)
+	if (FS->GetData(ptr, ActualSize) == ActualSize)
 		return nmemb;
 
 	return 0;
 }
 
-int vorbis_seek(void* datasource, ogg_int64_t offset, int whence)
+int vorbis_seek(void* datasource, const ogg_int64_t offset, const int whence)
 {
-	IFS* FS = (IFS*)datasource;
-	switch(whence)
+	auto FS = static_cast<IFS*>(datasource);
+	switch (whence)
 	{
-    case SEEK_SET:
-		FS->SetOffset((uLong)offset);
+	case SEEK_SET:
+		FS->SetOffset(static_cast<uLong>(offset));
 		break;
-    case SEEK_CUR:
-		FS->SetOffset((long)FS->GetOffset() + (long)offset);
+	case SEEK_CUR:
+		FS->SetOffset(static_cast<long>(FS->GetOffset()) + static_cast<long>(offset));
 		break;
-    case SEEK_END:
-		FS->SetOffset((long)FS->GetFileSize() + (long)offset);
+	case SEEK_END:
+		FS->SetOffset(static_cast<long>(FS->GetFileSize()) + static_cast<long>(offset));
 		break;
 	}
-	return (int)FS->GetOffset();
+	return static_cast<int>(FS->GetOffset());
 }
 
 int vorbis_close(void* datasource)
@@ -189,13 +189,13 @@ int vorbis_close(void* datasource)
 
 long vorbis_tell(void* datasource)
 {
-	IFS* FS = (IFS*)datasource;
-	return (long)FS->GetOffset();
+	auto FS = static_cast<IFS*>(datasource);
+	return static_cast<long>(FS->GetOffset());
 }
 
-OggFilter::OggFilter(void)
+OggFilter::OggFilter()
 {
-	Source = NULL;
+	Source = nullptr;
 	memset(&Vorbis, 0, sizeof(OggVorbis_File));
 	Callbacks.read_func = vorbis_read;
 	Callbacks.close_func = vorbis_close;

@@ -3,19 +3,17 @@
 
 namespace COMMON
 {
+	// Platform independence functions
+	extern bool PlatformGetComputerName(TString& name);
+	extern uInt PlatformGetCurrentProcessId();
+	extern uInt PlatformGetCurrentThreadId();
 
-// Platform independence functions
-extern bool PlatformGetComputerName(TString& name);
-extern uInt PlatformGetCurrentProcessId(void);
-extern uInt PlatformGetCurrentThreadId(void);
+	extern bool PlatformGetWorkPath(TString& path);
+	extern bool PlatformGetTempPath(TString& path);
+	extern bool PlatformGetTempFileName(TString& name);
+	extern bool PlatformGetExePath(TString& name);
 
-extern bool PlatformGetWorkPath(TString& path);
-extern bool PlatformGetTempPath(TString& path);
-extern bool PlatformGetTempFileName(TString& name);
-extern bool PlatformGetExePath(TString& name);
-
-extern bool PlatformReadTextFile(const TString& file, TStringArray& lines);
-
+	extern bool PlatformReadTextFile(const TString& file, TStringArray& lines);
 }
 
 #endif

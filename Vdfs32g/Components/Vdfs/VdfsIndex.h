@@ -3,42 +3,46 @@
 
 class IFS;
 
-class VdfsIndex : public Object
+class VdfsIndex final : public Object
 {
 public:
-	class FileInfo : public Object
+	class FileInfo final : public Object
 	{
 	public:
-		AString	Name;
-		uInt	Size;
-		IFS*	Flow;
-		uInt	Offset;
+		AString Name;
+		uInt Size;
+		IFS* Flow;
+		uInt Offset;
 
-	public:
-		FileInfo(void) { Size = 0; Flow = NULL; Offset = 0; };
-		virtual ~FileInfo(void) {};
+		FileInfo()
+		{
+			Size = 0;
+			Flow = nullptr;
+			Offset = 0;
+		};
+
+		~FileInfo() override
+		{};
 	};
 
-	typedef TunablePtr<FileInfo> FileInfoPtr;
+	using FileInfoPtr = TunablePtr<FileInfo>;
 
-public:
-	ObjectArray<FileInfoPtr>	Files;
-	HashTable<uInt>				FullIndexes;
-	HashTable<uInt>				FileIndexes;
+	ObjectArray<FileInfoPtr> Files;
+	HashTable<uInt> FullIndexes;
+	HashTable<uInt> FileIndexes;
 
-public:
 	FileInfo* GetFileInfo(const AString& filename)
 	{
 		uInt Index = FullIndexes[filename];
-		if(Index)
+		if (Index)
 			return Files[Index - 1];
-		return NULL;
+		return nullptr;
 	}
 
 	bool SearchFile(const AString& filename, char* fullname)
 	{
 		uInt Index = FileIndexes[filename];
-		if(Index)
+		if (Index)
 		{
 			strncpy(fullname, &Files[Index - 1]->Name.GetData()[1], Files[Index - 1]->Name.Length() - 1);
 			fullname[Files[Index - 1]->Name.Length() - 1] = '\0';
@@ -47,18 +51,22 @@ public:
 		return false;
 	}
 
-public:
-	void Clear(void)
+	void Clear()
 	{
 		Files.Clear();
 		FileIndexes.Clear();
 		FullIndexes.Clear();
 	}
 
-	VdfsIndex(void) { };
-	virtual ~VdfsIndex(void) { Clear(); };
+	VdfsIndex()
+	{};
+
+	~VdfsIndex() override
+	{
+		Clear();
+	};
 };
 
-typedef AutoPtr<VdfsIndex> VdfsIndexPtr;
+using VdfsIndexPtr = AutoPtr<VdfsIndex>;
 
 #endif

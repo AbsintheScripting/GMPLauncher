@@ -3,20 +3,19 @@
 
 namespace COMMON
 {
+	using Byte = unsigned char;
+	using uChar = unsigned char;
 
-typedef unsigned char Byte;
-typedef unsigned char uChar;
+	using Int16 = __int16;
+	using uInt16 = unsigned __int16;
+	using Int32 = __int32;
+	using uInt32 = unsigned __int32;
+	using Int64 = __int64;
+	using uInt64 = unsigned __int64;
 
-typedef __int16				Int16;
-typedef unsigned __int16	uInt16;
-typedef __int32				Int32;
-typedef unsigned __int32	uInt32;
-typedef __int64				Int64;
-typedef unsigned __int64	uInt64;
-
-typedef unsigned int   uInt;
-typedef unsigned long  uLong;
-typedef unsigned short uShort;
+	using uInt = unsigned int;
+	using uLong = unsigned long;
+	using uShort = unsigned short;
 
 #define dcast dynamic_cast
 #define rcast reinterpret_cast
@@ -25,7 +24,7 @@ typedef unsigned short uShort;
 
 #define COMMON_MAX_PATH 256
 
-// TCHAR extensions
+	// TCHAR extensions
 #ifdef _UNICODE
 #define _ttof _wtof
 #define _ttoi _wtoi
@@ -45,7 +44,6 @@ typedef unsigned short uShort;
 #define _wcstotcs(dest, src, max_len) wcstombs(dest, src, max_len)
 #define _tcstowcs(dest, src, max_len) mbstowcs(dest, src, max_len)
 #endif
-
 }
 
 #endif

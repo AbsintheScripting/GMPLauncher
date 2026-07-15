@@ -4,34 +4,35 @@
 class DLL
 {
 protected:
-	HMODULE			hDLL;
+	HMODULE hDLL;
 
 public:
 	void* GetFuncPtr(const char* name);
-	DLL(const TCHAR* name);
-	virtual ~DLL(void);
+	explicit DLL(const TCHAR* name);
+	virtual ~DLL();
 };
 
-class cBinkDll : public DLL
+class cBinkDll final : public DLL
 {
 public:
-	BinkOpenFuncPtr					BinkOpen;
-	BinkGotoFuncPtr					BinkGoto;
-	BinkSetSoundOnOffFuncPtr		BinkSetSoundOnOff;
-	BinkSetVolumeFuncG1Ptr			BinkSetVolumeG1;
-	BinkSetVolumeFuncG2Ptr			BinkSetVolumeG2;
-	BinkCloseFuncPtr				BinkClose;
-	BinkWaitFuncPtr					BinkWait;
-	BinkDoFrameFuncPtr				BinkDoFrame;
-	BinkNextFrameFuncPtr			BinkNextFrame;
-	BinkPauseFuncPtr				BinkPause;
-	BinkCopyToBufferFuncPtr			BinkCopyToBuffer;
+	BinkOpenFuncPtr BinkOpen;
+	BinkGotoFuncPtr BinkGoto;
+	BinkSetSoundOnOffFuncPtr BinkSetSoundOnOff;
+	BinkSetVolumeFuncG1Ptr BinkSetVolumeG1;
+	BinkSetVolumeFuncG2Ptr BinkSetVolumeG2;
+	BinkCloseFuncPtr BinkClose;
+	BinkWaitFuncPtr BinkWait;
+	BinkDoFrameFuncPtr BinkDoFrame;
+	BinkNextFrameFuncPtr BinkNextFrame;
+	BinkPauseFuncPtr BinkPause;
+	BinkCopyToBufferFuncPtr BinkCopyToBuffer;
 
-public:
-	cBinkDll(const TCHAR* data);
-	cBinkDll(void);
-	bool Load(void);
-	virtual ~cBinkDll(void) {};
+	cBinkDll() = delete;
+	explicit cBinkDll(const TCHAR* name);
+	bool Load();
+
+	~cBinkDll() override
+	{};
 };
 
 #endif

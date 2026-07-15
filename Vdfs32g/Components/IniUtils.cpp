@@ -1,8 +1,7 @@
 #include "PreCompiled.h"
 
-// Common
-
-bool ReadIniString(const char* section, const char* key, const char* defval, char* val, size_t size, const char* file)
+// Read a string value from an INI file section/key, returning default if not found
+bool ReadIniString(const char* section, const char* key, const char* defval, char* val, const size_t size, const char* file)
 {
 	AString SectionString("[");
 	SectionString += section;
@@ -11,33 +10,35 @@ bool ReadIniString(const char* section, const char* key, const char* defval, cha
 	bool InSection = false;
 	bool Done = false;
 
-	FILE* In = NULL;
-	if(!fopen_s(&In, file, "r"))
+	FILE* In = nullptr;
+	if (!fopen_s(&In, file, "r"))
 	{
-		if(In)
+		if (In)
 		{
 			char Line[1024];
-			while(fgets(Line, 1024, In))
+			while (fgets(Line, 1024, In))
 			{
-				if(SectionString.Compare(Line, true, SectionString.Length()))
+				// Detect the target section header line
+				if (SectionString.Compare(Line, true, SectionString.Length()))
 				{
 					InSection = true;
 					continue;
 				}
-				
-				if(InSection && strrchr(Line, '='))
+
+				// Parse key=value pairs within the target section
+				if (InSection && strrchr(Line, '='))
 				{
 					AString Key(Line);
 					Key.TruncateAfterFirst("=");
 					Key.CleanUp(' ');
-					if(Key.Compare(key, true))
+					if (Key.Compare(key, true))
 					{
 						AString Val(Line);
 						Val.TruncateBeforeFirst("=");
 						Val.TruncateAfterFirst(";");
 						Val.CleanUp('\n');
 
-						if(Val.Length())
+						if (Val.Length())
 						{
 							strcpy_s(val, size, Val);
 							Done = true;
@@ -45,19 +46,21 @@ bool ReadIniString(const char* section, const char* key, const char* defval, cha
 						}
 					}
 				}
-				else
-				if(strrchr(Line, '['))
+				// Exit section on encountering another section header
+				else if (strrchr(Line, '['))
 					InSection = false;
 			}
 		}
 
 		fclose(In);
 	}
-	if(!Done)
+	// Return default value if key was not found
+	if (!Done)
 		strcpy_s(val, size, defval);
 	return Done;
 }
 
+// Write a string value to an INI file section/key, preserving existing content with .bak backup
 bool WriteIniString(const char* section, const char* key, const char* val, const char* file)
 {
 	AString BakFile(file);
@@ -71,61 +74,63 @@ bool WriteIniString(const char* section, const char* key, const char* val, const
 	ValString += "=";
 	ValString += val;
 
-	FILE* In = NULL;
-	if(PathFileExistsA(file))
+	FILE* In = nullptr;
+	if (PathFileExistsA(file))
 	{
+		// Back up existing file before modifying
 		DeleteFileA(BakFile);
-		if(!MoveFileA(file, BakFile))
+		if (!MoveFileA(file, BakFile))
 			return false;
-		if(fopen_s(&In, BakFile, "r"))
+		if (fopen_s(&In, BakFile, "r"))
 			return false;
 	}
 
 	bool SectionDone = false;
 	bool Done = false;
 
-	FILE* Out = NULL;
-	if(!fopen_s(&Out, file, "w"))
+	FILE* Out = nullptr;
+	if (!fopen_s(&Out, file, "w"))
 	{
-		if(In)
+		if (In)
 		{
 			char Line[1024];
-			while(fgets(Line, 1024, In))
+			while (fgets(Line, 1024, In))
 			{
 				bool SkipLine = false;
 
-				if(!SectionDone)
+				if (!SectionDone)
 				{
-					if(SectionString.Compare(Line, true, SectionString.Length()))
+					// Once we find the target section, mark it and prepare to write
+					if (SectionString.Compare(Line, true, SectionString.Length()))
 						SectionDone = true;
 				}
 				else
 				{
-					if(!Done)
+					if (!Done)
 					{
-						if(strrchr(Line, '='))
+						// Replace existing key or insert new value at section boundary
+						if (strrchr(Line, '='))
 						{
 							AString Key(Line);
 							Key.TruncateAfterFirst("=");
 							Key.CleanUp(' ');
-							if(Key.Compare(key, true))
+							if (Key.Compare(key, true))
 							{
 								Done = true;
 								fprintf(Out, "%s\n", ValString.GetData());
 								SkipLine = true;
 							}
 						}
-						else
-						if(strrchr(Line, '['))
+						else if (strrchr(Line, '['))
 						{
 							Done = true;
 							fprintf(Out, "%s\n", ValString.GetData());
 						}
 					}
 				}
-				if(!SkipLine)
+				if (!SkipLine)
 				{
-					if(Line[strlen(Line) - 1] == '\n')
+					if (Line[strlen(Line) - 1] == '\n')
 						fprintf(Out, "%s", Line);
 					else
 						fprintf(Out, "%s\n", Line);
@@ -133,7 +138,8 @@ bool WriteIniString(const char* section, const char* key, const char* val, const
 			}
 		}
 
-		if(!SectionDone)
+		// Create section and write key if it didn't exist
+		if (!SectionDone)
 		{
 			SectionDone = true;
 			Done = true;
@@ -141,8 +147,7 @@ bool WriteIniString(const char* section, const char* key, const char* val, const
 			fprintf(Out, "%s\n", SectionString.GetData());
 			fprintf(Out, "%s\n", ValString.GetData());
 		}
-		else
-		if(!Done)
+		else if (!Done)
 		{
 			Done = true;
 			fprintf(Out, "%s\n", ValString.GetData());
@@ -150,7 +155,7 @@ bool WriteIniString(const char* section, const char* key, const char* val, const
 		fclose(Out);
 	}
 
-	if(In)
+	if (In)
 	{
 		fclose(In);
 		DeleteFileA(BakFile);
@@ -158,15 +163,19 @@ bool WriteIniString(const char* section, const char* key, const char* val, const
 	return SectionDone && Done;
 }
 
-// Utility
-
-bool GothicReadIniString(const char* section, const char* key, const char* defval, char* val, size_t size, const char* file)
+// Read an INI string resolving the path relative to the Gothic game directory
+bool GothicReadIniString(const char* section,
+                         const char* key,
+                         const char* defval,
+                         char* val,
+                         const size_t size,
+                         const char* file)
 {
 	TString WorkPath;
-	if(PlatformGetWorkPath(WorkPath) && WorkPath.TruncateBeforeLast(_T("\\")))
+	if (PlatformGetWorkPath(WorkPath) && WorkPath.TruncateBeforeLast(_T("\\")))
 	{
 		AString File(file);
-		if(!WorkPath.Compare(_T("System"), true))
+		if (!WorkPath.Compare(_T("System"), true))
 			File.Format("System\\%s", file);
 
 		return ReadIniString(section, key, defval, val, size, File);
@@ -174,13 +183,14 @@ bool GothicReadIniString(const char* section, const char* key, const char* defva
 	return false;
 }
 
+// Write an INI string resolving the path relative to the Gothic game directory
 bool GothicWriteIniString(const char* section, const char* key, const char* val, const char* file)
 {
 	TString WorkPath;
-	if(PlatformGetWorkPath(WorkPath) && WorkPath.TruncateBeforeLast(_T("\\")))
+	if (PlatformGetWorkPath(WorkPath) && WorkPath.TruncateBeforeLast(_T("\\")))
 	{
 		AString File(file);
-		if(!WorkPath.Compare(_T("System"), true))
+		if (!WorkPath.Compare(_T("System"), true))
 			File.Format("System\\%s", file);
 
 		return WriteIniString(section, key, val, File);

@@ -8,47 +8,48 @@ bool PatchPtr(AString& section, TaggedArray<AString, AString>& params)
 	uInt Org = 0;
 	uInt New = 0;
 
-	AString& OrgText = params.GetElement("Org");
-	AString& OrgOffsetText = params.GetElement("OrgOffset");
-	CheckOrg = (((OrgText.Length() > 0) && OrgText.IsUInt()) || ((OrgOffsetText.Length() > 0) && OrgOffsetText.IsUInt()));
-	Org = (uInt)OrgText.ToUInt();
+	const AString& OrgText = params.GetElement("Org");
+	const AString& OrgOffsetText = params.GetElement("OrgOffset");
+	CheckOrg = (((OrgText.Length() > 0) && OrgText.IsUInt())
+		|| ((OrgOffsetText.Length() > 0) && OrgOffsetText.IsUInt()));
+	Org = OrgText.ToUInt();
 	Org += OrgOffsetText.ToUInt();
 
 	New = (uInt)MemoryBlocks.GetElement(params.GetElement("NewBlock"));
-	New += (uInt)params.GetElement("NewOffset").ToUInt();
+	New += params.GetElement("NewOffset").ToUInt();
 
-	AString& AddrSectText = params.GetElement("AddrSect");
-	if(AddrSectText.Length())
+	const AString& AddrSectText = params.GetElement("AddrSect");
+	if (AddrSectText.Length())
 	{
 		size_t size = 0;
-		const uChar* data = GetSectionAddress((const uChar*)GetModuleHandle(NULL), AddrSectText, size);
-		if(!data)
+		const uChar* data = GetSectionAddress((const uChar*)GetModuleHandle(nullptr), AddrSectText, size);
+		if (!data)
 			return false;
-		for(size_t i = 0; i < size; i++)
+		for (size_t i = 0; i < size; i++)
 		{
-			if(*(uInt*)&data[i] == Org)
+			if (*(uInt*)&data[i] == Org && !Patch((uChar*)&data[i],
+			                                      sizeof(void*),
+			                                      CheckOrg ? (uChar*)&Org : nullptr,
+			                                      (uChar*)&New))
 			{
-				if(!Patch((uChar*)&data[i], sizeof(void*), CheckOrg ? (uChar*)&Org : NULL, (uChar*)&New))
-				{
-					RedirectIOToConsole();
-					printf("%s failed\n", section.GetData());
-					return false;
-				}
+				RedirectIOToConsole();
+				printf("%s failed\n", section.GetData());
+				return false;
 			}
 		}
 	}
 	else
 	{
-		uChar* Address = NULL;
+		uChar* Address = nullptr;
 
-		AString& AddrText = params.GetElement("Addr");
+		const AString& AddrText = params.GetElement("Addr");
 		Address = (uChar*)AddrText.ToUInt();
 
-		AString& BaseText = params.GetElement("Base");
-		if(BaseText)
+		const AString& BaseText = params.GetElement("Base");
+		if (BaseText)
 			Address = (uChar*)((uInt)Address + (uInt)MemoryBlocks.GetElement(BaseText));
 
-		if(!Patch(Address, sizeof(void*), CheckOrg ? (uChar*)&Org : NULL, (uChar*)&New))
+		if (!Patch(Address, sizeof(void*), CheckOrg ? (uChar*)&Org : nullptr, (uChar*)&New))
 		{
 			RedirectIOToConsole();
 			printf("%s failed\n", section.GetData());
@@ -65,61 +66,67 @@ bool PatchInt(AString& section, TaggedArray<AString, AString>& params)
 	int Org = 0;
 	int New = 0;
 
-	AString& OrgText = params.GetElement("Org");
+	const AString& OrgText = params.GetElement("Org");
 	CheckOrg = ((OrgText.Length() > 0) && OrgText.IsInt());
 	Org = OrgText.ToInt();
 
-	AString& NewText = params.GetElement("New");
-	if(NewText.Length() && NewText.IsInt())
+	const AString& NewText = params.GetElement("New");
+	if (NewText.Length() && NewText.IsInt())
 		New = NewText.ToInt();
 
-	AString& NewVarText = params.GetElement("NewVar");
-	if(NewVarText.Length() && NewVarText.GetData(":"))
+	const AString& NewVarText = params.GetElement("NewVar");
+	if (NewVarText.Length() && NewVarText.GetData(":"))
 	{
 		AString NewVarSect(NewVarText);
 		AString NewVarParam(NewVarText);
-		if(NewVarSect.TruncateAfterFirst(":") && NewVarParam.TruncateBeforeFirst(":"))
+		if (NewVarSect.TruncateAfterFirst(":") && NewVarParam.TruncateBeforeFirst(":"))
 		{
 			char Value[256];
-			if(GothicReadIniString(NewVarSect, NewVarParam, "", Value, 256, "SystemPack.ini") || GothicReadIniString(NewVarSect, NewVarParam, "", Value, 256, "Gothic.ini"))
+			if (GothicReadIniString(NewVarSect, NewVarParam, "", Value, 256, "SystemPack.ini") || GothicReadIniString(
+				NewVarSect,
+				NewVarParam,
+				"",
+				Value,
+				256,
+				"Gothic.ini"))
 				New += atoi(Value);
 		}
 	}
 
-	AString& NewMulText = params.GetElement("NewMul");
-	if(NewMulText.Length() && NewMulText.IsInt())
+	const AString& NewMulText = params.GetElement("NewMul");
+	if (NewMulText.Length() && NewMulText.IsInt())
 		New *= NewMulText.ToInt();
 
-	AString& NewAddText = params.GetElement("NewAdd");
-	if(NewAddText.Length() && NewAddText.IsInt())
+	const AString& NewAddText = params.GetElement("NewAdd");
+	if (NewAddText.Length() && NewAddText.IsInt())
 		New += NewAddText.ToInt();
 
-	AString& NewMinText = params.GetElement("NewMin");
-	if(NewMinText.Length() && NewMinText.IsInt())
+	const AString& NewMinText = params.GetElement("NewMin");
+	if (NewMinText.Length() && NewMinText.IsInt())
 	{
-		int NewMin = NewMinText.ToInt();
-		if(New < NewMin)
+		const int NewMin = NewMinText.ToInt();
+		if (New < NewMin)
 			New = NewMin;
 	}
 
-	AString& NewMaxText = params.GetElement("NewMax");
-	if(NewMaxText.Length() && NewMaxText.IsInt())
+	const AString& NewMaxText = params.GetElement("NewMax");
+	if (NewMaxText.Length() && NewMaxText.IsInt())
 	{
-		int NewMax = NewMaxText.ToInt();
-		if(New > NewMax)
+		const int NewMax = NewMaxText.ToInt();
+		if (New > NewMax)
 			New = NewMax;
 	}
 
-	AString& AddrSectText = params.GetElement("AddrSect");
-	if(AddrSectText.Length())
+	const AString& AddrSectText = params.GetElement("AddrSect");
+	if (AddrSectText.Length())
 	{
 		size_t size = 0;
-		const uChar* data = GetSectionAddress((const uChar*)GetModuleHandle(NULL), AddrSectText, size);
-		for(size_t i = 0; i < size; i++)
+		const uChar* data = GetSectionAddress((const uChar*)GetModuleHandle(nullptr), AddrSectText, size);
+		for (size_t i = 0; i < size; i++)
 		{
-			if(*(int*)&data[i] == Org)
+			if (*(int*)&data[i] == Org)
 			{
-				if(!Patch((uChar*)&data[i], sizeof(int), CheckOrg ? (uChar*)&Org : NULL, (uChar*)&New))
+				if (!Patch((uChar*)&data[i], sizeof(int), CheckOrg ? (uChar*)&Org : nullptr, (uChar*)&New))
 				{
 					RedirectIOToConsole();
 					printf("%s failed\n", section.GetData());
@@ -130,16 +137,16 @@ bool PatchInt(AString& section, TaggedArray<AString, AString>& params)
 	}
 	else
 	{
-		uChar* Address = NULL;
+		uChar* Address = nullptr;
 
-		AString& AddrText = params.GetElement("Addr");
+		const AString& AddrText = params.GetElement("Addr");
 		Address = (uChar*)AddrText.ToUInt();
 
-		AString& BaseText = params.GetElement("Base");
-		if(BaseText)
+		const AString& BaseText = params.GetElement("Base");
+		if (BaseText)
 			Address = (uChar*)((uInt)Address + (uInt)MemoryBlocks.GetElement(BaseText));
 
-		if(!Patch(Address, sizeof(int), CheckOrg ? (uChar*)&Org : NULL, (uChar*)&New))
+		if (!Patch(Address, sizeof(int), CheckOrg ? (uChar*)&Org : nullptr, (uChar*)&New))
 		{
 			RedirectIOToConsole();
 			printf("%s failed\n", section.GetData());
@@ -156,61 +163,67 @@ bool PatchFloat(AString& section, TaggedArray<AString, AString>& params)
 	float Org = 0.0f;
 	float New = 0.0f;
 
-	AString& OrgText = params.GetElement("Org");
+	const AString& OrgText = params.GetElement("Org");
 	CheckOrg = ((OrgText.Length() > 0) && OrgText.IsFloat());
 	Org = OrgText.ToFloat();
 
-	AString& NewText = params.GetElement("New");
-	if(NewText.Length() && NewText.IsFloat())
+	const AString& NewText = params.GetElement("New");
+	if (NewText.Length() && NewText.IsFloat())
 		New = NewText.ToFloat();
 
-	AString& NewVarText = params.GetElement("NewVar");
-	if(NewVarText.Length() && NewVarText.GetData(":"))
+	const AString& NewVarText = params.GetElement("NewVar");
+	if (NewVarText.Length() && NewVarText.GetData(":"))
 	{
 		AString NewVarSect(NewVarText);
 		AString NewVarParam(NewVarText);
-		if(NewVarSect.TruncateAfterFirst(":") && NewVarParam.TruncateBeforeFirst(":"))
+		if (NewVarSect.TruncateAfterFirst(":") && NewVarParam.TruncateBeforeFirst(":"))
 		{
 			char Value[256];
-			if(GothicReadIniString(NewVarSect, NewVarParam, "", Value, 256, "SystemPack.ini") || GothicReadIniString(NewVarSect, NewVarParam, "", Value, 256, "Gothic.ini"))
-				New += (float)atof(Value);
+			if (GothicReadIniString(NewVarSect, NewVarParam, "", Value, 256, "SystemPack.ini") || GothicReadIniString(
+				NewVarSect,
+				NewVarParam,
+				"",
+				Value,
+				256,
+				"Gothic.ini"))
+				New += static_cast<float>(atof(Value));
 		}
 	}
 
-	AString& NewMulText = params.GetElement("NewMul");
-	if(NewMulText.Length() && NewMulText.IsFloat())
+	const AString& NewMulText = params.GetElement("NewMul");
+	if (NewMulText.Length() && NewMulText.IsFloat())
 		New *= NewMulText.ToFloat();
 
-	AString& NewAddText = params.GetElement("NewAdd");
-	if(NewAddText.Length() && NewAddText.IsFloat())
+	const AString& NewAddText = params.GetElement("NewAdd");
+	if (NewAddText.Length() && NewAddText.IsFloat())
 		New += NewAddText.ToFloat();
 
-	AString& NewMinText = params.GetElement("NewMin");
-	if(NewMinText.Length() && NewMinText.IsFloat())
+	const AString& NewMinText = params.GetElement("NewMin");
+	if (NewMinText.Length() && NewMinText.IsFloat())
 	{
-		float NewMin = NewMinText.ToFloat();
-		if(New < NewMin)
+		const float NewMin = NewMinText.ToFloat();
+		if (New < NewMin)
 			New = NewMin;
 	}
 
-	AString& NewMaxText = params.GetElement("NewMax");
-	if(NewMaxText.Length() && NewMaxText.IsFloat())
+	const AString& NewMaxText = params.GetElement("NewMax");
+	if (NewMaxText.Length() && NewMaxText.IsFloat())
 	{
-		float NewMax = NewMaxText.ToFloat();
-		if(New > NewMax)
+		const float NewMax = NewMaxText.ToFloat();
+		if (New > NewMax)
 			New = NewMax;
 	}
 
-	AString& AddrSectText = params.GetElement("AddrSect");
-	if(AddrSectText.Length())
+	const AString& AddrSectText = params.GetElement("AddrSect");
+	if (AddrSectText.Length())
 	{
 		size_t size = 0;
-		const uChar* data = GetSectionAddress((const uChar*)GetModuleHandle(NULL), AddrSectText, size);
-		for(size_t i = 0; i < size; i++)
+		const uChar* data = GetSectionAddress((const uChar*)GetModuleHandle(nullptr), AddrSectText, size);
+		for (size_t i = 0; i < size; i++)
 		{
-			if(*(float*)&data[i] == Org)
+			if (*(float*)&data[i] == Org)
 			{
-				if(!Patch((uChar*)&data[i], sizeof(float), CheckOrg ? (uChar*)&Org : NULL, (uChar*)&New))
+				if (!Patch((uChar*)&data[i], sizeof(float), CheckOrg ? (uChar*)&Org : nullptr, (uChar*)&New))
 				{
 					RedirectIOToConsole();
 					printf("%s failed\n", section.GetData());
@@ -221,16 +234,16 @@ bool PatchFloat(AString& section, TaggedArray<AString, AString>& params)
 	}
 	else
 	{
-		uChar* Address = NULL;
+		uChar* Address = nullptr;
 
-		AString& AddrText = params.GetElement("Addr");
+		const AString& AddrText = params.GetElement("Addr");
 		Address = (uChar*)AddrText.ToUInt();
 
-		AString& BaseText = params.GetElement("Base");
-		if(BaseText)
+		const AString& BaseText = params.GetElement("Base");
+		if (BaseText)
 			Address = (uChar*)((uInt)Address + (uInt)MemoryBlocks.GetElement(BaseText));
 
-		if(!Patch(Address, sizeof(float), CheckOrg ? (uChar*)&Org : NULL, (uChar*)&New))
+		if (!Patch(Address, sizeof(float), CheckOrg ? (uChar*)&Org : nullptr, (uChar*)&New))
 		{
 			RedirectIOToConsole();
 			printf("%s failed\n", section.GetData());
@@ -249,32 +262,32 @@ bool PatchHex(AString& section, TaggedArray<AString, AString>& params)
 	AString& NewText = params.GetElement("New");
 	NewText.CleanUp(' ');
 	NewText.CleanUp('\t');
-	for(uInt n = 0; n < NewText.Length() / 2; n++)
+	for (uInt n = 0; n < NewText.Length() / 2; n++)
 	{
 		uInt Value = 0;
-		char Buffer[3] = { NewText[n * 2], NewText[n * 2 + 1], '\0' };
+		const char Buffer[3] = { NewText[n * 2], NewText[n * 2 + 1], '\0' };
 		sscanf(Buffer, "%x", &Value);
-		New.Add((uChar)Value);
+		New.Add(static_cast<uChar>(Value));
 	}
 
-	if(!NewText.Length())
+	if (!NewText.Length())
 	{
-		AString& NewAnsi = params.GetElement("NewAnsi");
-		if(NewAnsi)
+		const AString& NewAnsi = params.GetElement("NewAnsi");
+		if (NewAnsi)
 			New.Add((const uChar*)NewAnsi.GetData(), NewAnsi.Length() + 1);
 	}
 
 	AString& OrgText = params.GetElement("Org");
-	if(OrgText)
+	if (OrgText)
 	{
 		OrgText.CleanUp(' ');
 		OrgText.CleanUp('\t');
-		for(uInt n = 0; n < OrgText.Length() / 2; n++)
+		for (uInt n = 0; n < OrgText.Length() / 2; n++)
 		{
 			uInt Value = 0;
-			char Buffer[3] = { OrgText[n * 2], OrgText[n * 2 + 1], '\0' };
+			const char Buffer[3] = { OrgText[n * 2], OrgText[n * 2 + 1], '\0' };
 			sscanf(Buffer, "%x", &Value);
-			Org.Add((uChar)Value);
+			Org.Add(static_cast<uChar>(Value));
 		}
 	}
 	else
@@ -284,49 +297,46 @@ bool PatchHex(AString& section, TaggedArray<AString, AString>& params)
 		AString& OrgFillText = params.GetElement("OrgFill");
 		OrgFillText.CleanUp(' ');
 		OrgFillText.CleanUp('\t');
-		for(uInt n = 0; n < OrgFillText.Length() / 2; n++)
+		for (uInt n = 0; n < OrgFillText.Length() / 2; n++)
 		{
 			uInt Value = 0;
-			char Buffer[3] = { OrgFillText[n * 2], OrgFillText[n * 2 + 1], '\0' };
+			const char Buffer[3] = { OrgFillText[n * 2], OrgFillText[n * 2 + 1], '\0' };
 			sscanf(Buffer, "%x", &Value);
-			OrgFill.Add((uChar)Value);
+			OrgFill.Add(static_cast<uChar>(Value));
 		}
 
-		if(OrgFill.Size())
+		if (OrgFill.Size())
 		{
-			while(Org.Size() < New.Size())
+			while (Org.Size() < New.Size())
 				Org.Add(OrgFill);
 			Org.SetSize(New.Size());
 		}
 	}
 
-	if((New.Size() != Org.Size()) && Org.Size())
+	if ((New.Size() != Org.Size()) && Org.Size())
 	{
 		RedirectIOToConsole();
 		printf("%s failed, New.Size() != Org.Size()\n", section.GetData());
 		return false;
 	}
 
-	AString& AddrSectText = params.GetElement("AddrSect");
-	if(AddrSectText.Length())
+	const AString& AddrSectText = params.GetElement("AddrSect");
+	if (AddrSectText.Length())
 		return false;
-	else
+	uChar* Address = nullptr;
+
+	const AString& AddrText = params.GetElement("Addr");
+	Address = (uChar*)AddrText.ToUInt();
+
+	const AString& BaseText = params.GetElement("Base");
+	if (BaseText)
+		Address = (uChar*)((uInt)Address + (uInt)MemoryBlocks.GetElement(BaseText));
+
+	if (!Patch(Address, New.Size(), Org.Size() ? Org : NULL, New))
 	{
-		uChar* Address = NULL;
-
-		AString& AddrText = params.GetElement("Addr");
-		Address = (uChar*)AddrText.ToUInt();
-
-		AString& BaseText = params.GetElement("Base");
-		if(BaseText)
-			Address = (uChar*)((uInt)Address + (uInt)MemoryBlocks.GetElement(BaseText));
-
-		if(!Patch(Address, New.Size(), Org.Size() ? Org : NULL, New))
-		{
-			RedirectIOToConsole();
-			printf("%s failed\n", section.GetData());
-			return false;
-		}
+		RedirectIOToConsole();
+		printf("%s failed\n", section.GetData());
+		return false;
 	}
 
 	return true;
@@ -335,29 +345,30 @@ bool PatchHex(AString& section, TaggedArray<AString, AString>& params)
 bool ApplyPatch(const TString& filename)
 {
 	AStringArray Sections;
-	if(ReadIniSections(Sections, filename))
+	if (ReadIniSections(Sections, filename))
 	{
 		// ConVars
 		TaggedArray<AString, AString> ConVars;
-		if(ReadIniSectionParams(ConVars, "ConVars", filename))
+		if (ReadIniSectionParams(ConVars, "ConVars", filename))
 		{
-			for(uInt v = 0; v < ConVars.Size(); v++)
+			for (uInt v = 0; v < ConVars.Size(); v++)
 			{
 				ConVars.GetElement(v).TruncateBeforeFirst("\"");
 				ConVars.GetElement(v).TruncateAfterFirst("\"");
 
 				AString ConVarSect(ConVars.GetTag(v));
 				AString ConVar(ConVars.GetTag(v));
-				if(ConVarSect.TruncateAfterFirst(":") && ConVar.TruncateBeforeFirst(":"))
+				if (ConVarSect.TruncateAfterFirst(":") && ConVar.TruncateBeforeFirst(":"))
 				{
 					char Value[256];
-					if(!GothicReadIniString(ConVarSect, ConVar, ConVars.GetElement(v), Value, 256, "SystemPack.ini"))
+					if (!GothicReadIniString(ConVarSect, ConVar, ConVars.GetElement(v), Value, 256, "SystemPack.ini"))
 					{
-						if(ConVars.GetElement(v).GetData(":"))
+						if (ConVars.GetElement(v).GetData(":"))
 						{
 							AString ValueConVarSect(ConVars.GetElement(v));
 							AString ValueConVar(ConVars.GetElement(v));
-							if(!ValueConVarSect.TruncateAfterFirst(":") || !ValueConVar.TruncateBeforeFirst(":") || !GothicReadIniString(ValueConVarSect, ValueConVar, "", Value, 256, "SystemPack.ini"))
+							if (!ValueConVarSect.TruncateAfterFirst(":") || !ValueConVar.TruncateBeforeFirst(":") || !
+								GothicReadIniString(ValueConVarSect, ValueConVar, "", Value, 256, "SystemPack.ini"))
 							{
 								RedirectIOToConsole();
 								printf("%s failed\n", ConVars.GetTag(v).GetData());
@@ -373,25 +384,26 @@ bool ApplyPatch(const TString& filename)
 
 		// zConVars
 		ConVars.Clear();
-		if(ReadIniSectionParams(ConVars, "zConVars", filename))
+		if (ReadIniSectionParams(ConVars, "zConVars", filename))
 		{
-			for(uInt v = 0; v < ConVars.Size(); v++)
+			for (uInt v = 0; v < ConVars.Size(); v++)
 			{
 				ConVars.GetElement(v).TruncateBeforeFirst("\"");
 				ConVars.GetElement(v).TruncateAfterFirst("\"");
 
 				AString ConVarSect(ConVars.GetTag(v));
 				AString ConVar(ConVars.GetTag(v));
-				if(ConVarSect.TruncateAfterFirst(":") && ConVar.TruncateBeforeFirst(":"))
+				if (ConVarSect.TruncateAfterFirst(":") && ConVar.TruncateBeforeFirst(":"))
 				{
 					char Value[256];
-					if(!GothicReadIniString(ConVarSect, ConVar, ConVars.GetElement(v), Value, 256, "Gothic.ini"))
+					if (!GothicReadIniString(ConVarSect, ConVar, ConVars.GetElement(v), Value, 256, "Gothic.ini"))
 					{
-						if(ConVars.GetElement(v).GetData(":"))
+						if (ConVars.GetElement(v).GetData(":"))
 						{
 							AString ValueConVarSect(ConVars.GetElement(v));
 							AString ValueConVar(ConVars.GetElement(v));
-							if(!ValueConVarSect.TruncateAfterFirst(":") || !ValueConVar.TruncateBeforeFirst(":") || !GothicReadIniString(ValueConVarSect, ValueConVar, "", Value, 256, "Gothic.ini"))
+							if (!ValueConVarSect.TruncateAfterFirst(":") || !ValueConVar.TruncateBeforeFirst(":") || !
+								GothicReadIniString(ValueConVarSect, ValueConVar, "", Value, 256, "Gothic.ini"))
 							{
 								RedirectIOToConsole();
 								printf("%s failed\n", ConVars.GetTag(v).GetData());
@@ -407,91 +419,95 @@ bool ApplyPatch(const TString& filename)
 
 		// MemBlocks
 		TaggedArray<AString, AString> MemBlocks;
-		if(ReadIniSectionParams(MemBlocks, "MemBlocks", filename))
+		if (ReadIniSectionParams(MemBlocks, "MemBlocks", filename))
 		{
-			for(uInt b = 0; b < MemBlocks.Size(); b++)
+			for (uInt b = 0; b < MemBlocks.Size(); b++)
 			{
 				MemBlocks.GetElement(b).TruncateBeforeFirst("\"");
 				MemBlocks.GetElement(b).TruncateAfterFirst("\"");
 
-				if(MemBlocks.GetElement(b).IsUInt())
-					MemoryBlocks.Add(MemBlocks.GetTag(b), (uChar*)VirtualAlloc(NULL, (SIZE_T)MemBlocks.GetElement(b).ToUInt(), MEM_COMMIT | MEM_RESERVE, MemBlocks.GetTag(b).Compare("Exe", true, 3) ? PAGE_EXECUTE_READWRITE : PAGE_READWRITE));
+				if (MemBlocks.GetElement(b).IsUInt())
+					MemoryBlocks.Add(MemBlocks.GetTag(b),
+					                 static_cast<uChar*>(VirtualAlloc(nullptr,
+					                                                  MemBlocks.GetElement(b).ToUInt(),
+					                                                  MEM_COMMIT | MEM_RESERVE,
+					                                                  MemBlocks.GetTag(b).Compare("Exe", true, 3)
+						                                                  ? PAGE_EXECUTE_READWRITE
+						                                                  : PAGE_READWRITE)));
 			}
 		}
 		Sections.Erase(_T("MemBlocks"));
 
 		// Patches
-		for(uInt s = 0; s < Sections.Size(); s++)
+		for (uInt s = 0; s < Sections.Size(); s++)
 		{
 			TaggedArray<AString, AString> Params;
-			if(ReadIniSectionParams(Params, Sections.GetElement(s), filename))
+			if (ReadIniSectionParams(Params, Sections.GetElement(s), filename))
 			{
-				for(uInt p = 0; p < Params.Size(); p++)
+				for (uInt p = 0; p < Params.Size(); p++)
 				{
 					Params.GetElement(p).TruncateBeforeFirst("\"");
 					Params.GetElement(p).TruncateAfterFirst("\"");
 				}
 
 				AString& Condition = Params.GetElement("Condition");
-				if(Condition)
+				if (Condition)
 				{
 					bool Skip = true;
 
 					AString ConditionSect(Condition);
 					AString ConditionParam(Condition);
-					if(!ConditionSect.TruncateAfterFirst(":") || !ConditionParam.TruncateBeforeFirst(":"))
+					if (!ConditionSect.TruncateAfterFirst(":") || !ConditionParam.TruncateBeforeFirst(":"))
 						continue;
 					char Value[256];
-					if(!GothicReadIniString(ConditionSect, ConditionParam, "", Value, 256, "SystemPack.ini") && !GothicReadIniString(ConditionSect, ConditionParam, "", Value, 256, "Gothic.ini"))
+					if (!GothicReadIniString(ConditionSect, ConditionParam, "", Value, 256, "SystemPack.ini") && !
+						GothicReadIniString(ConditionSect, ConditionParam, "", Value, 256, "Gothic.ini"))
 						continue;
 
 					AStringArrayPtr ConditionValues = Params.GetElement("ConditionValue").GetAllTokens(",");
-					if(ConditionValues)
+					if (ConditionValues)
 					{
-						for(uInt v = 0; v < ConditionValues->Size(); v++)
+						for (uInt v = 0; v < ConditionValues->Size(); v++)
 						{
-							if(!(Skip = !ConditionValues->GetElement(v).Compare(Value, true)))
+							if (!(Skip = !ConditionValues->GetElement(v).Compare(Value, true)))
 								break;
 						}
 					}
 					else
 					{
 						AStringArrayPtr ConditionNotValues = Params.GetElement("ConditionNotValue").GetAllTokens(",");
-						if(ConditionNotValues)
+						if (ConditionNotValues)
 						{
-							for(uInt v = 0; v < ConditionNotValues->Size(); v++)
+							for (uInt v = 0; v < ConditionNotValues->Size(); v++)
 							{
-								if(!(Skip = ConditionNotValues->GetElement(v).Compare(Value, true)))
+								if (!(Skip = ConditionNotValues->GetElement(v).Compare(Value, true)))
 									break;
 							}
 						}
 					}
-					if(Skip)
+					if (Skip)
 						continue;
 				}
 
 				AString& Type = Params.GetElement("Type");
-				if(Type.Compare("ptr", true))
+				if (Type.Compare("ptr", true))
 				{
-					if(!PatchPtr(Sections.GetElement(s), Params))
+					if (!PatchPtr(Sections.GetElement(s), Params))
 						return false;
 				}
-				else
-				if(Type.Compare("int", true))
+				else if (Type.Compare("int", true))
 				{
-					if(!PatchInt(Sections.GetElement(s), Params))
+					if (!PatchInt(Sections.GetElement(s), Params))
 						return false;
 				}
-				else
-				if(Type.Compare("float", true))
+				else if (Type.Compare("float", true))
 				{
-					if(!PatchFloat(Sections.GetElement(s), Params))
+					if (!PatchFloat(Sections.GetElement(s), Params))
 						return false;
 				}
-				else
-				if(Type.Compare("hex", true))
+				else if (Type.Compare("hex", true))
 				{
-					if(!PatchHex(Sections.GetElement(s), Params))
+					if (!PatchHex(Sections.GetElement(s), Params))
 						return false;
 				}
 			}
@@ -500,78 +516,78 @@ bool ApplyPatch(const TString& filename)
 	return true;
 }
 
-typedef enum PROCESS_DPI_AWARENESS {
-    PROCESS_DPI_UNAWARE = 0,
-    PROCESS_SYSTEM_DPI_AWARE = 1,
-    PROCESS_PER_MONITOR_DPI_AWARE = 2
-} PROCESS_DPI_AWARENESS;
+using PROCESS_DPI_AWARENESS = enum PROCESS_DPI_AWARENESS
+{
+	PROCESS_DPI_UNAWARE = 0,
+	PROCESS_SYSTEM_DPI_AWARE = 1,
+	PROCESS_PER_MONITOR_DPI_AWARE = 2
+};
 
-typedef HRESULT (STDAPICALLTYPE* SetProcessDpiAwarenessPtr)(PROCESS_DPI_AWARENESS value);
-typedef HRESULT (STDAPICALLTYPE* GetProcessDpiAwarenessPtr)(HANDLE hprocess, PROCESS_DPI_AWARENESS *value);
+using SetProcessDpiAwarenessPtr = HRESULT(STDAPICALLTYPE*)(PROCESS_DPI_AWARENESS value);
+using GetProcessDpiAwarenessPtr = HRESULT(STDAPICALLTYPE*)(HANDLE hprocess, PROCESS_DPI_AWARENESS* value);
 
-HRESULT SetProcessDpiAwareness(PROCESS_DPI_AWARENESS value)
+HRESULT SetProcessDpiAwareness(const PROCESS_DPI_AWARENESS value)
 {
 	HRESULT hResult = S_FALSE;
-	HMODULE hModule = LoadLibrary(_T("Shcore.dll"));
-	if(hModule)
+	const HMODULE hModule = LoadLibrary(_T("Shcore.dll"));
+	if (hModule)
 	{
-		SetProcessDpiAwarenessPtr Func = (SetProcessDpiAwarenessPtr)GetProcAddress(hModule, "SetProcessDpiAwareness");
-		if(Func)
+		const auto Func = (SetProcessDpiAwarenessPtr)GetProcAddress(hModule, "SetProcessDpiAwareness");
+		if (Func)
 			hResult = Func(value);
 		FreeLibrary(hModule);
 	}
-	return hResult; 
+	return hResult;
 }
 
-HRESULT GetProcessDpiAwareness(HANDLE hprocess, PROCESS_DPI_AWARENESS* value)
+HRESULT GetProcessDpiAwareness(const HANDLE hprocess, PROCESS_DPI_AWARENESS* value)
 {
 	HRESULT hResult = S_FALSE;
-	HMODULE hModule = LoadLibrary(_T("Shcore.dll"));
-	if(hModule)
+	const HMODULE hModule = LoadLibrary(_T("Shcore.dll"));
+	if (hModule)
 	{
-		GetProcessDpiAwarenessPtr Func = (GetProcessDpiAwarenessPtr)GetProcAddress(hModule, "GetProcessDpiAwareness");
-		if(Func)
+		const auto Func = (GetProcessDpiAwarenessPtr)GetProcAddress(hModule, "GetProcessDpiAwareness");
+		if (Func)
 			hResult = Func(hprocess, value);
 		FreeLibrary(hModule);
 	}
-	return hResult; 
+	return hResult;
 }
 
-typedef BOOL (WINAPI* SetProcessDPIAwarePtr)(VOID);
+using SetProcessDPIAwarePtr = BOOL(WINAPI*)();
 
-BOOL SafeSetProcessDPIAware(VOID)
+BOOL SafeSetProcessDPIAware()
 {
 	BOOL hResult = FALSE;
-	HMODULE hModule = LoadLibrary(_T("user32.dll"));
-	if(hModule)
+	const HMODULE hModule = LoadLibrary(_T("user32.dll"));
+	if (hModule)
 	{
-		SetProcessDPIAwarePtr Func = (SetProcessDPIAwarePtr)GetProcAddress(hModule, "SetProcessDPIAware");
-		if(Func)
+		const auto Func = GetProcAddress(hModule, "SetProcessDPIAware");
+		if (Func)
 			hResult = Func();
 		FreeLibrary(hModule);
 	}
-	return hResult; 
+	return hResult;
 }
 
 uLong ExeCRC = 0;
 uLong CodeCRC = 0;
 TString PatchFileName;
 
-bool InstallKillerFix(void)
+bool InstallKillerFix()
 {
-	if(IsWindows8Point1OrGreater()) 
+	if (IsWindows8Point1OrGreater())
 	{
-		int Res = SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE) ;
-		if((Res != S_OK) && (Res != E_ACCESSDENIED))
+		const int Res = SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
+		if ((Res != S_OK) && (Res != E_ACCESSDENIED))
 		{
 			RedirectIOToConsole();
 			printf("Failed to set process DPI awareness\n");
 		}
 	}
-	else
-	if(IsWindows7OrGreater())
+	else if (IsWindows7OrGreater())
 	{
-		if(!SafeSetProcessDPIAware())
+		if (!SafeSetProcessDPIAware())
 		{
 			RedirectIOToConsole();
 			printf("Failed to set process DPI aware\n");
@@ -582,33 +598,35 @@ bool InstallKillerFix(void)
 
 	bool ChangeWorkDir = false;
 	TString WorkPath;
-	if(PlatformGetWorkPath(WorkPath) && WorkPath.TruncateBeforeLast(_T("\\")) && WorkPath.Compare(_T("System"), true))
+	if (PlatformGetWorkPath(WorkPath) && WorkPath.TruncateBeforeLast(_T("\\")) && WorkPath.Compare(_T("System"), true))
 		ChangeWorkDir = (SetCurrentDirectory(_T("..\\")) == TRUE);
 
 	ExeCRC = GetExeCrc32();
 	CodeCRC = GetSectionCrc32(".text");
-	if(PathFileExists(PatchFileName.Format(_T("Patches\\%X.patch"), ExeCRC)) || PathFileExists(PatchFileName.Format(_T("Patches\\CODE_%X.patch"), CodeCRC)))
+	if (PathFileExists(PatchFileName.Format(_T("Patches\\%X.patch"), ExeCRC)) || PathFileExists(
+		PatchFileName.Format(_T("Patches\\CODE_%X.patch"), CodeCRC)))
 	{
 		Result = true;
 	}
-	else
-	if(!vdf_initall_internal())
-	{	
+	else if (!vdf_initall_internal())
+	{
 		char TempFileName[256];
 		TempFileName[0] = '\\';
-		if(vdf_searchfile(String().Format("%X.PATCH", ExeCRC), &TempFileName[1]) || vdf_searchfile(String().Format("CODE_%X.PATCH", CodeCRC), &TempFileName[1]))
+		if (vdf_searchfile(String().Format("%X.PATCH", ExeCRC), &TempFileName[1]) || vdf_searchfile(
+			String().Format("CODE_%X.PATCH", CodeCRC),
+			&TempFileName[1]))
 		{
-			long patch = vdf_fopen(TempFileName, VDF_VIRTUAL);
-			if(patch > 0)
+			const long patch = vdf_fopen(TempFileName, VDF_VIRTUAL);
+			if (patch > 0)
 			{
-				if(vdf_ffilesize(patch) && PlatformGetTempFileName(PatchFileName))
+				if (vdf_ffilesize(patch) && PlatformGetTempFileName(PatchFileName))
 				{
 					FILE* temp = _tfopen(PatchFileName, _T("wb"));
-					if(temp)
+					if (temp)
 					{
 						char Buffer[256];
 						long readed = 0;
-						while(readed = vdf_fread(patch, Buffer, 256))
+						while (readed = vdf_fread(patch, Buffer, 256))
 							fwrite(Buffer, 1, readed, temp);
 						Result = true;
 						fclose(temp);
@@ -619,16 +637,23 @@ bool InstallKillerFix(void)
 		}
 	}
 
-	if(Result)
+	if (Result)
 		Result = ApplyPatch(PatchFileName);
 	else
 	{
 		char UnknExeCrc[256];
-		if(!GothicReadIniString("DEBUG", "UnknExeCrc", "0", UnknExeCrc, 256, "SystemPack.ini") || (strtoul(UnknExeCrc, NULL, 16) != ExeCRC))
+		if (!GothicReadIniString("DEBUG", "UnknExeCrc", "0", UnknExeCrc, 256, "SystemPack.ini") || (strtoul(
+			UnknExeCrc,
+			nullptr,
+			16) != ExeCRC))
 		{
 			TCHAR Buffer[256];
-			_stprintf_s(Buffer, 256, _T("Unsupported gothic exe version (CRC: 0x%X, CodeCRC: 0x%X), fix will not be applied"), ExeCRC, CodeCRC);
-			if(MessageBox(NULL, Buffer, _T("Warning"), MB_ICONWARNING | MB_OKCANCEL) != IDOK)
+			_stprintf_s(Buffer,
+			            256,
+			            _T("Unsupported gothic exe version (CRC: 0x%X, CodeCRC: 0x%X), fix will not be applied"),
+			            ExeCRC,
+			            CodeCRC);
+			if (MessageBox(nullptr, Buffer, _T("Warning"), MB_ICONWARNING | MB_OKCANCEL) != IDOK)
 				return false;
 			Result = true;
 
@@ -639,16 +664,16 @@ bool InstallKillerFix(void)
 			Result = true;
 	}
 
-	if(ChangeWorkDir)
+	if (ChangeWorkDir)
 		SetCurrentDirectory(_T("System\\"));
 	return Result;
 }
 
-void RemoveKillerFix(void)
+void RemoveKillerFix()
 {
-	for(uInt b = 0; b < MemoryBlocks.Size(); b++)
+	for (uInt b = 0; b < MemoryBlocks.Size(); b++)
 	{
-		if(MemoryBlocks[b])
+		if (MemoryBlocks[b])
 			VirtualFree(MemoryBlocks[b], 0, MEM_RELEASE);
 	}
 	MemoryBlocks.Clear();

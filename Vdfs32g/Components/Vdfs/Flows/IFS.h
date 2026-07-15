@@ -9,11 +9,11 @@
 class IfsBase : public Object
 {
 public:
-	virtual uLong	GetFileSize(void) const = 0;
-	virtual uLong	GetOffset(void) const = 0;
-	virtual bool	SetOffset(uLong offset) = 0;
-	virtual uLong	GetData(void* buffer, uLong size) = 0;
-	virtual void	Close(void) = 0;
+	virtual uLong GetFileSize() const = 0;
+	virtual uLong GetOffset() const = 0;
+	virtual bool SetOffset(uLong offset) = 0;
+	virtual uLong GetData(void* buffer, uLong size) = 0;
+	virtual void Close() = 0;
 };
 
 class IFS : public IfsBase
@@ -22,77 +22,84 @@ protected:
 	class IfsBuffer
 	{
 	public:
-		uLong	Begin;
-		Byte	Data[VDFS_BUFFER_SIZE];
-		uLong	Size;
+		uLong Begin;
+		Byte Data[VDFS_BUFFER_SIZE];
+		uLong Size;
 
-	public:
-		void Reset(void)
+		void Reset()
 		{
 			Begin = 0;
 			Size = 0;
 		}
 
-	public:
-		IfsBuffer(void)
+		IfsBuffer()
 		{
 			Begin = 0;
 			Size = 0;
 		}
 
-		~IfsBuffer(void)
-		{
-		}
+		~IfsBuffer()
+		{}
 	};
 
-protected:
 	TString Name;
 
-	VdfsIndex::FileInfoPtr	CurrentFileInfo;
-	uLong					CurrentOffset;
-	IfsBuffer				Buffer;
+	VdfsIndex::FileInfoPtr CurrentFileInfo;
+	uLong CurrentOffset;
+	IfsBuffer Buffer;
 
-protected:
-	virtual uLong	Read(uLong offset, void* buffer, uLong size) = 0;
-
-public:
-	virtual const TCHAR*	GetName(void) const;
-	virtual int				GetType(void) const = 0;
+	virtual uLong Read(uLong offset, void* buffer, uLong size) = 0;
 
 public:
-	virtual VdfsIndex::FileInfo*	GetFileInfo(const AString& filename) { return NULL; };
-	virtual bool					FileExists(const AString& filename) { return false; };
+	virtual const TCHAR* GetName() const;
+	virtual int GetType() const = 0;
 
-	virtual bool	UpdateIndex(VdfsIndex* index) = 0;
+	virtual VdfsIndex::FileInfo* GetFileInfo(const AString& filename)
+	{
+		return nullptr;
+	};
 
-	virtual IFS*	Open(VdfsIndex::FileInfoPtr& fileinfo) = 0;
-	virtual uLong	GetFileSize(void) const = 0;
-	virtual uLong	GetOffset(void) const;
-	virtual bool	SetOffset(uLong offset);
-	virtual uLong	GetData(void* buffer, uLong size);
-	virtual void	Close(void);
+	virtual bool FileExists(const AString& filename)
+	{
+		return false;
+	};
 
-public:
-	virtual uInt	GetStreamsSize(void) { return 0; };
+	virtual bool UpdateIndex(VdfsIndex* index) = 0;
 
-public:
-	IFS(void) { CurrentOffset = 0; };
-	virtual ~IFS(void) {};
+	virtual IFS* Open(VdfsIndex::FileInfoPtr& fileinfo) = 0;
+	uLong GetFileSize() const override = 0;
+	uLong GetOffset() const override;
+	bool SetOffset(uLong offset) override;
+	uLong GetData(void* buffer, uLong size) override;
+	void Close() override;
+
+	virtual uInt GetStreamsSize()
+	{
+		return 0;
+	};
+
+	IFS()
+	{
+		CurrentOffset = 0;
+	};
+
+	~IFS() override
+	{};
 };
 
-inline const TCHAR* IFS::GetName(void) const
+inline const TCHAR* IFS::GetName() const
 {
 	return Name;
 }
 
-inline uLong IFS::GetOffset(void) const
+inline uLong IFS::GetOffset() const
 {
 	return CurrentOffset;
 }
 
-inline bool	IFS::SetOffset(uLong offset)
+inline bool IFS::SetOffset(const uLong offset)
 {
-	if(offset <= GetFileSize())
+	if (offset <= GetFileSize())
 	{
 		CurrentOffset = offset;
 		return true;
@@ -100,26 +107,26 @@ inline bool	IFS::SetOffset(uLong offset)
 	return false;
 }
 
-inline void IFS::Close(void)
+inline void IFS::Close()
 {
-	CurrentFileInfo = NULL;
+	CurrentFileInfo = nullptr;
 	CurrentOffset = 0;
 	Buffer.Reset();
 }
 
 inline uLong IFS::GetData(void* buffer, uLong size)
 {
-	if(!size)
+	if (!size)
 		return 0;
 
-	if(GetFileSize() <= CurrentOffset)
+	if (GetFileSize() <= CurrentOffset)
 		return 0;
 
 	size = MIN(size, GetFileSize() - CurrentOffset);
 
-	if(size > VDFS_BUFFER_SIZE)
+	if (size > VDFS_BUFFER_SIZE)
 	{
-		if(Read(CurrentOffset, buffer, size))
+		if (Read(CurrentOffset, buffer, size))
 		{
 			CurrentOffset += size;
 			return size;
@@ -127,11 +134,11 @@ inline uLong IFS::GetData(void* buffer, uLong size)
 		return 0;
 	}
 
-	if((CurrentOffset < Buffer.Begin) || (CurrentOffset + size > Buffer.Begin + Buffer.Size))
+	if ((CurrentOffset < Buffer.Begin) || (CurrentOffset + size > Buffer.Begin + Buffer.Size))
 	{
 		Buffer.Reset();
 		uLong SizeToRead = MIN(VDFS_BUFFER_SIZE, GetFileSize() - CurrentOffset);
-		if(!Read(CurrentOffset, Buffer.Data, SizeToRead))
+		if (!Read(CurrentOffset, Buffer.Data, SizeToRead))
 			return 0;
 		Buffer.Begin = CurrentOffset;
 		Buffer.Size = SizeToRead;
@@ -142,7 +149,7 @@ inline uLong IFS::GetData(void* buffer, uLong size)
 	return size;
 }
 
-typedef AutoPtr<IFS> IfsPtr;
+using IfsPtr = AutoPtr<IFS>;
 
 class IfsFilter : public IfsBase
 {
@@ -150,6 +157,6 @@ public:
 	virtual IfsFilter* Open(IFS* src) = 0;
 };
 
-typedef AutoPtr<IfsFilter> IfsFilterPtr;
+using IfsFilterPtr = AutoPtr<IfsFilter>;
 
 #endif

@@ -1,40 +1,49 @@
 #ifndef _PATCH_UTILS_
 #define _PATCH_UTILS_
 
-class Timer
+class Timer final
 {
-private:
 	LARGE_INTEGER StartTime;
 	LARGE_INTEGER Frequency;
 
 public:
-	void		Start(void) { QueryPerformanceCounter(&StartTime); };
-	LONGLONG	GetPrecision(void) { return Frequency.QuadPart; };
+	void Start()
+	{
+		QueryPerformanceCounter(&StartTime);
+	};
 
-	float		GetElapsedTimeSeconds(void)
+	LONGLONG GetPrecision()
+	{
+		return Frequency.QuadPart;
+	};
+
+	float GetElapsedTimeSeconds()
 	{
 		LARGE_INTEGER CurrentTime;
 		QueryPerformanceCounter(&CurrentTime);
 
-		return float(CurrentTime.QuadPart - StartTime.QuadPart) / Frequency.QuadPart;
+		return static_cast<float>(CurrentTime.QuadPart - StartTime.QuadPart) / Frequency.QuadPart;
 	}
 
-public:
-	Timer(void) 
+	Timer()
+		: StartTime(), Frequency()
 	{
-		QueryPerformanceFrequency(&Frequency); 
-	};
-	virtual ~Timer(void) {};
+		QueryPerformanceFrequency(&Frequency);
+	}
+	;
+
+	~Timer()
+	{};
 };
 
-extern void RedirectIOToConsole(void);
+extern void RedirectIOToConsole();
 
 extern bool GetModuleFileNameString(HMODULE hModule, TString& filename);
 
 extern bool GetGothicWindowSize(POINT& size);
 
-extern bool IsVdfs(void);
-extern bool IsSpacer(void);
+extern bool IsVdfs();
+extern bool IsSpacer();
 
 #define EXE_CRC_GOTHIC2_NOTR_REPORT_V2 0x2BCD7E30
 #define EXE_CRC_GOTHIC2_FIX 0xA2EE682C
@@ -42,7 +51,7 @@ extern bool IsSpacer(void);
 #define EXE_CRC_GOTHIC_MOD_PATCHED 0x1F8D4811
 #define EXE_CRC_GOTHIC 0x2C75C07A
 
-extern uLong GetExeCrc32(void);
+extern uLong GetExeCrc32();
 
 #define CODE_CRC_GOTHIC 0xF6DD31C4
 
@@ -51,14 +60,15 @@ extern const uChar* GetSectionAddress(const uChar* codeBase, const char* name, s
 
 extern bool Patch(uChar* data, size_t size, uChar* org, uChar* patch);
 
-template<typename type>
-bool PatchAddress(type* address, type value)
+// Helper template: patch a single address with a value of any type
+template <typename T>
+bool PatchAddress(T* address, T value)
 {
-	DWORD OldProtect = 0;
-	if(VirtualProtect(address, sizeof(type), PAGE_READWRITE, &OldProtect))
+	DWORD OldProtect;
+	if (VirtualProtect(address, sizeof(T), PAGE_READWRITE, &OldProtect))
 	{
 		*address = value;
-		VirtualProtect(address, sizeof(type), OldProtect, &OldProtect);
+		VirtualProtect(address, sizeof(T), OldProtect, &OldProtect);
 		return true;
 	}
 	return false;
@@ -66,13 +76,20 @@ bool PatchAddress(type* address, type value)
 
 extern DWORD GetImportSize(const uChar* codeBase);
 extern PIMAGE_IMPORT_DESCRIPTOR GetImportDescriptor(const uChar* codeBase, const char* name);
-extern FARPROC* GetImportFunctionAddress(const uChar* codeBase, PIMAGE_IMPORT_DESCRIPTOR importDesc, bool ordinal, const char* name);
+extern FARPROC* GetImportFunctionAddress(const uChar* codeBase,
+                                         PIMAGE_IMPORT_DESCRIPTOR importDesc,
+                                         bool ordinal,
+                                         const char* name);
 
-template<typename type>
-bool PatchImportFunctionAddress(const uChar* codeBase, PIMAGE_IMPORT_DESCRIPTOR importDesc, bool ordinal, const char* name, type value)
+template <typename type>
+bool PatchImportFunctionAddress(const uChar* codeBase,
+                                const PIMAGE_IMPORT_DESCRIPTOR importDesc,
+                                const bool ordinal,
+                                const char* name,
+                                type value)
 {
 	FARPROC* Func = GetImportFunctionAddress(codeBase, importDesc, ordinal, name);
-	if(Func)
+	if (Func)
 		return PatchAddress<FARPROC>(Func, value);
 	return false;
 }

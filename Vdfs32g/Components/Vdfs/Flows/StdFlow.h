@@ -1,62 +1,60 @@
 #ifndef _STD_FLOW_
 #define _STD_FLOW_
 
-class StdFlow : public IFS
+class StdFlow final : public IFS
 {
 protected:
 	HANDLE FileHandle = INVALID_HANDLE_VALUE;
 
 	ObjectArray<AutoPtr<StdFlow>> Streams;
 
-protected:
-	uInt		BuildIndex(const TCHAR* dir, VdfsIndex* index);
-	StdFlow*	GetFreeStream(void);
+	uInt BuildIndex(const TCHAR* dir, VdfsIndex* index);
+	StdFlow* GetFreeStream();
 
-protected:
-	virtual uLong	Read(uLong offset, void* buffer, uLong size);
+	uLong Read(uLong offset, void* buffer, uLong size) override;
 
 public:
-	virtual int	GetType(void) const;
+	int GetType() const override;
 
-public:
-	virtual VdfsIndex::FileInfo*	GetFileInfo(const AString& filename);
-	virtual bool					FileExists(const AString& filename);
+	VdfsIndex::FileInfo* GetFileInfo(const AString& filename) override;
+	bool FileExists(const AString& filename) override;
 
-	virtual bool	UpdateFileIndex(const AString& file, uInt size, bool failifexists, VdfsIndex* index);
-	virtual bool	UpdateIndex(VdfsIndex* index);
+	virtual bool UpdateFileIndex(const AString& file, uInt size, bool failifexists, VdfsIndex* index);
+	bool UpdateIndex(VdfsIndex* index) override;
 
-	virtual IFS*	Open(VdfsIndex::FileInfoPtr& fileinfo);
-	virtual uLong	GetFileSize(void) const;
-	virtual void	Close(void);
+	IFS* Open(VdfsIndex::FileInfoPtr& fileinfo) override;
+	uLong GetFileSize() const override;
+	void Close() override;
 
-public:
-	virtual uInt	GetStreamsSize(void) { return Streams.Size(); };
+	uInt GetStreamsSize() override
+	{
+		return Streams.Size();
+	};
 
-public:
 	bool Init(VdfsIndex::FileInfoPtr& fileinfo);
 
-	StdFlow(void);
-	virtual ~StdFlow(void);
+	StdFlow();
+	~StdFlow() override;
 };
 
-inline int StdFlow::GetType(void) const
+inline int StdFlow::GetType() const
 {
 	return IFS_TYPE_STDIO;
 }
 
-inline uLong StdFlow::GetFileSize(void) const
+inline uLong StdFlow::GetFileSize() const
 {
 	return (CurrentFileInfo ? CurrentFileInfo->Size : 0);
 }
 
-inline StdFlow::StdFlow(void) 
-{ 
-	Name = "stdio"; 
+inline StdFlow::StdFlow()
+{
+	Name = "stdio";
 	FileHandle = INVALID_HANDLE_VALUE;
-	CurrentFileInfo = NULL; 
+	CurrentFileInfo = nullptr;
 }
 
-inline StdFlow::~StdFlow(void)
+inline StdFlow::~StdFlow()
 {
 	Close();
 }

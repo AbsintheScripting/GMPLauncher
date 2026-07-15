@@ -3,7 +3,7 @@
 
 #define BINK_SURFACE_32          3
 
-struct BINK 
+struct BINK
 {
 	uInt Width;
 	uInt Height;
@@ -66,30 +66,46 @@ struct BINK
 
 #endif
 
-typedef BINK*		(__stdcall* BinkOpenFuncPtr)(const char* name, uInt flags);
-typedef int			(__stdcall* BinkGetRectsFuncPtr)(BINK* bnk, uInt flags);
-typedef void		(__stdcall* BinkSetSoundTrackFuncPtr)(uInt total_tracks, uInt* tracks);
-typedef void		(__stdcall* BinkGotoFuncPtr)(BINK* bnk, uInt frame, int flags);
-typedef void*		(__stdcall* BinkOpenDirectSoundFuncPtr)(uInt param);
-typedef int			(__stdcall* BinkSetSoundSystemFuncPtr)(void* open, uInt param);
-typedef int			(__stdcall* BinkSetSoundOnOffFuncPtr)(BINK* bnk, int onoff);
-typedef void*		(__stdcall* BinkOpenMilesFuncPtr)(uInt param);
-typedef void		(__stdcall* BinkGetSummaryFuncPtr)(BINK* bnk, void* sum);
-typedef uInt		(__stdcall* BinkGetKeyFrameFuncPtr)(BINK* bnk, uInt frame, int flags);
-typedef void		(__stdcall* BinkGetRealtimeFuncPtr)(BINK* bink, void* run, uInt frames);
-typedef uInt		(__stdcall* BinkGetTrackIDFuncPtr)(BINK* bnk, uInt trackindex);
-typedef void		(__stdcall* BinkSetVolumeFuncG2Ptr)(BINK* bnk, uInt trackid, int volume);
-typedef void		(__stdcall* BinkSetVolumeFuncG1Ptr)(BINK* bnk, int volume);
-typedef void		(__stdcall* BinkCloseFuncPtr)(BINK* bnk);
-typedef int			(__stdcall* BinkWaitFuncPtr)(BINK* bnk);
-typedef void		(__stdcall* BinkRegisterFrameBuffersFuncPtr)(BINK* bink, void* fbset);
-typedef int			(__stdcall* BinkDoFrameFuncPtr)(BINK* bnk);
-typedef int			(__stdcall* BinkShouldSkipFuncPtr)(BINK* bink);
-typedef void		(__stdcall* BinkNextFrameFuncPtr)(BINK* bnk);
-typedef void		(__stdcall* BinkGetFrameBuffersInfoFuncPtr)(BINK* bink, void* fbset);
-typedef int			(__stdcall* BinkPauseFuncPtr)(BINK* bnk, int pause);
-typedef int			(__stdcall* BinkCopyToBufferFuncPtr)(BINK* bnk, void* dest, int destpitch, uInt destheight, uInt destx, uInt desty, uInt flags);
-typedef int			(__stdcall* BinkCopyToBufferRectFuncPtr)(BINK* bnk,void* dest, int destpitch, uInt destheight, uInt destx, uInt desty, uInt srcx, uInt srcy, uInt srcw, uInt srch, uInt flags);
-typedef const char*	(__stdcall* BinkGetErrorFuncPtr)(void);
+using BinkOpenFuncPtr = BINK* (__stdcall*)(const char* name, uInt flags);
+using BinkGetRectsFuncPtr = int(__stdcall*)(BINK* bnk, uInt flags);
+using BinkSetSoundTrackFuncPtr = void(__stdcall*)(uInt total_tracks, uInt* tracks);
+using BinkGotoFuncPtr = void(__stdcall*)(BINK* bnk, uInt frame, int flags);
+using BinkOpenDirectSoundFuncPtr = void* (__stdcall*)(uInt param);
+using BinkSetSoundSystemFuncPtr = int(__stdcall*)(void* open, uInt param);
+using BinkSetSoundOnOffFuncPtr = int(__stdcall*)(BINK* bnk, int onoff);
+using BinkOpenMilesFuncPtr = void* (__stdcall*)(uInt param);
+using BinkGetSummaryFuncPtr = void(__stdcall*)(BINK* bnk, void* sum);
+using BinkGetKeyFrameFuncPtr = uInt(__stdcall*)(BINK* bnk, uInt frame, int flags);
+using BinkGetRealtimeFuncPtr = void(__stdcall*)(BINK* bink, void* run, uInt frames);
+using BinkGetTrackIDFuncPtr = uInt(__stdcall*)(BINK* bnk, uInt trackindex);
+using BinkSetVolumeFuncG2Ptr = void(__stdcall*)(BINK* bnk, uInt trackid, int volume);
+using BinkSetVolumeFuncG1Ptr = void(__stdcall*)(BINK* bnk, int volume);
+using BinkCloseFuncPtr = void(__stdcall*)(BINK* bnk);
+using BinkWaitFuncPtr = int(__stdcall*)(BINK* bnk);
+using BinkRegisterFrameBuffersFuncPtr = void(__stdcall*)(BINK* bink, void* fbset);
+using BinkDoFrameFuncPtr = int(__stdcall*)(BINK* bnk);
+using BinkShouldSkipFuncPtr = int(__stdcall*)(BINK* bink);
+using BinkNextFrameFuncPtr = void(__stdcall*)(BINK* bnk);
+using BinkGetFrameBuffersInfoFuncPtr = void(__stdcall*)(BINK* bink, void* fbset);
+using BinkPauseFuncPtr = int(__stdcall*)(BINK* bnk, int pause);
+using BinkCopyToBufferFuncPtr = int(__stdcall*)(BINK* bnk,
+                                                void* dest,
+                                                int destpitch,
+                                                uInt destheight,
+                                                uInt destx,
+                                                uInt desty,
+                                                uInt flags);
+using BinkCopyToBufferRectFuncPtr = int(__stdcall*)(BINK* bnk,
+                                                    void* dest,
+                                                    int destpitch,
+                                                    uInt destheight,
+                                                    uInt destx,
+                                                    uInt desty,
+                                                    uInt srcx,
+                                                    uInt srcy,
+                                                    uInt srcw,
+                                                    uInt srch,
+                                                    uInt flags);
+using BinkGetErrorFuncPtr = const char* (__stdcall*)();
 
 #endif

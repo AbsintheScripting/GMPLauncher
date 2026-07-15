@@ -3,7 +3,7 @@
 
 extern char zStartupWindowed[256];
 
-extern bool InstallIniFix(void);
-extern void RemoveIniFix(void);
+extern bool InstallIniFix();
+extern void RemoveIniFix();
 
 #endif

@@ -6,27 +6,27 @@ bool ExtractSplash(TString& name)
 
 	bool ChangeWorkDir = false;
 	TString WorkPath;
-	if(PlatformGetWorkPath(WorkPath) && WorkPath.TruncateBeforeLast(_T("\\")) && WorkPath.Compare(_T("System"), true))
+	if (PlatformGetWorkPath(WorkPath) && WorkPath.TruncateBeforeLast(_T("\\")) && WorkPath.Compare(_T("System"), true))
 		ChangeWorkDir = (SetCurrentDirectory(_T("..\\")) == TRUE);
 
-	if(!vdf_initall_internal())
+	if (!vdf_initall_internal())
 	{
 		char SplashName[256];
 		SplashName[0] = '\\';
-		if(vdf_searchfile("SPLASH.BMP", &SplashName[1]))
+		if (vdf_searchfile("SPLASH.BMP", &SplashName[1]))
 		{
-			long splash = vdf_fopen(SplashName, VDF_VIRTUAL);
-			if(splash > 0)
+			const long splash = vdf_fopen(SplashName, VDF_VIRTUAL);
+			if (splash > 0)
 			{
 				TString TempFile;
-				if(vdf_ffilesize(splash) && PlatformGetTempFileName(TempFile))
+				if (vdf_ffilesize(splash) && PlatformGetTempFileName(TempFile))
 				{
 					FILE* temp = _tfopen(TempFile, _T("wb"));
-					if(temp)
+					if (temp)
 					{
 						char Buffer[256];
 						long readed = 0;
-						while(readed = vdf_fread(splash, Buffer, 256))
+						while (readed = vdf_fread(splash, Buffer, 256))
 							fwrite(Buffer, 1, readed, temp);
 						name = TempFile;
 						Result = true;
@@ -38,40 +38,39 @@ bool ExtractSplash(TString& name)
 		}
 	}
 
-	if(ChangeWorkDir)
+	if (ChangeWorkDir)
 		SetCurrentDirectory(_T("System\\"));
 	return Result;
 }
 
-HBITMAP WINAPI MyLoadBitmapA(HINSTANCE hInstance, LPCSTR lpBitmapName)
+HBITMAP WINAPI MyLoadBitmapA(const HINSTANCE hInstance, LPCSTR lpBitmapName)
 {
-	if((uInt)lpBitmapName == 169)
+	if ((uInt)lpBitmapName == 169)
 	{
 		TString TempName;
-		if(ExtractSplash(TempName))
+		if (ExtractSplash(TempName))
 		{
-			HBITMAP hBMP = (HBITMAP)LoadImage(NULL, TempName, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-			if(hBMP)
+			const auto hBMP = static_cast<HBITMAP>(LoadImage(NULL, TempName, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
+			if (hBMP)
 				return hBMP;
 		}
 
-		HBITMAP hBMP = (HBITMAP)LoadImage(NULL, _T("Splash.bmp"), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-		if(hBMP)
+		const auto hBMP = static_cast<HBITMAP>(LoadImage(NULL, _T("Splash.bmp"), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
+		if (hBMP)
 			return hBMP;
 	}
 
 	return LoadBitmapA(hInstance, lpBitmapName);
 }
 
-bool InstallSplashFix(void)
+bool InstallSplashFix()
 {
-	uChar* codeBase = (uChar*)GetModuleHandle(NULL);
-	PIMAGE_IMPORT_DESCRIPTOR importDesc = GetImportDescriptor(codeBase, "USER32.dll");
-	if(importDesc)
+	const uChar* codeBase = (uChar*)GetModuleHandle(nullptr);
+	const PIMAGE_IMPORT_DESCRIPTOR importDesc = GetImportDescriptor(codeBase, "USER32.dll");
+	if (importDesc)
 		PatchImportFunctionAddress<FARPROC>(codeBase, importDesc, false, "LoadBitmapA", (FARPROC)MyLoadBitmapA);
 	return true;
 }
 
-void RemoveSplashFix(void)
-{
-}
+void RemoveSplashFix()
+{}
