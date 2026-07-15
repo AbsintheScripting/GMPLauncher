@@ -1,6 +1,4 @@
-// stdafx.h: включаемый файл дл€ стандартных системных включаемых файлов
-// или включаемых файлов дл€ конкретного проекта, которые часто используютс€, но
-// не часто измен€ютс€
+// stdafx.h: a header file for standard system headers or project-specific headers that are used frequently but rarely changed.
 #pragma once
 
 #include <stdio.h>

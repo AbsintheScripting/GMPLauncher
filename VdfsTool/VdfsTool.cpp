@@ -1,4 +1,4 @@
-// VdfsTool.cpp: главный файл проекта.
+// VdfsTool.cpp: main project file.
 
 #include "stdafx.h"
 #include "Form1.h"
@@ -8,11 +8,11 @@ using namespace VdfsTool;
 [STAThreadAttribute]
 int main(array<System::String ^> ^args)
 {
-	// Включение визуальных эффектов Windows XP до создания каких-либо элементов управления
+	// Enabling Windows XP visual effects before creating any controls
 	Application::EnableVisualStyles();
 	Application::SetCompatibleTextRenderingDefault(false); 
 
-	// Создание главного окна и его запуск
+	// Creation of the main window and its launch
 	Application::Run(gcnew Form1());
 	return 0;
 }

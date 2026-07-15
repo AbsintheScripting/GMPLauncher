@@ -8,10 +8,16 @@
 #include "resource.rh"
 #define WIN32_LEAN_AND_MEAN
 #define NONAMELESSUNION
+#pragma warning(push)
+#pragma warning(disable: 4324) // pops up because of WINDOWS_IGNORE_PACKING_MISMATCH
 #include <windows.h>
+#pragma warning(pop)
 #include <windowsx.h>
 #include <commctrl.h>
+#pragma warning(push)
+#pragma warning(disable: 4201) // Microsoft's fault, but doesn't bother us
 #include <richedit.h>
+#pragma warning(pop)
 #include <shellapi.h>
 #include <tlhelp32.h>
 

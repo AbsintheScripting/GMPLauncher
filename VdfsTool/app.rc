@@ -1,4 +1,4 @@
-// Описание ресурсов, созданное в Microsoft Visual C++.
+// A resource description created in Microsoft Visual C++.
 //
 #include "resource.h"
 
@@ -8,15 +8,15 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// ресурсы для английской версии (США)
+// Resources for the English version (USA)
 
 
 /////////////////////////////////////////////////////////////////////////////
 //
-// Значок
+// What does it mean?
 //
 
-// Значок, размещенный первым, или значок с наименьшим значением идентификатора становится значком приложения
+// The first-placed icon, or the one with the lowest identifier value, becomes the application icon.
 
 LANGUAGE 25, 1
 #pragma code_page(1251)
@@ -54,10 +54,10 @@ END
 #ifndef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
 //
-// Создано из ресурса TEXTINCLUDE 3.
+// Nightly from the TEXTINCLUDE 3 resource.
 //
 
 
 /////////////////////////////////////////////////////////////////////////////
-#endif    // не APSTUDIO_INVOKED
+#endif    // ne APSTUDIO_INVOKED
 

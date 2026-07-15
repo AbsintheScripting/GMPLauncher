@@ -7,9 +7,8 @@ using namespace System::Runtime::InteropServices;
 using namespace System::Security::Permissions;
 
 //
-// Общие сведения об этой сборке предоставляются следующим набором
-// атрибутов. Отредактируйте значения этих атрибутов, чтобы изменить
-// общие сведения об этой сборке.
+// General information about this build is provided by the following set of attributes.
+// Edit the values of these attributes to change the general information about this build.
 //
 [assembly:AssemblyTitleAttribute("VdfsTool")];
 [assembly:AssemblyDescriptionAttribute("")];
@@ -21,15 +20,15 @@ using namespace System::Security::Permissions;
 [assembly:AssemblyCultureAttribute("")];
 
 //
-// Сведения о версии сборки состоят из следующих четырех значений:
+// The build version information consists of the following four values:
 //
-//      Основной номер версии
-//      Дополнительный номер версии
-//      Номер построения
-//      Редакция
+//      Major version number
+//      Minor version number
+//      Build number
+//      Revision
 //
-// Можно задать все значения или принять номер построения и номер редакции по умолчанию,
-// используя "*", как показано ниже:
+// You can specify all the values or accept the build number and revision number by default,
+// using вЂ*вЂ™, as shown below:
 
 [assembly:AssemblyVersionAttribute("1.0.*")];
 
@@ -37,4 +36,5 @@ using namespace System::Security::Permissions;
 
 [assembly:CLSCompliantAttribute(true)];
 
-[assembly:SecurityPermission(SecurityAction::RequestMinimum, UnmanagedCode = true)];
+//[assembly:SecurityPermission(SecurityAction::RequestMinimum, UnmanagedCode = true)];
+

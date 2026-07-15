@@ -13,7 +13,7 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// русский resources
+// Russian resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_RUS)
 #ifdef _WIN32
@@ -46,12 +46,12 @@ END
 
 #endif    // APSTUDIO_INVOKED
 
-#endif    // русский resources
+#endif    // Russian resources
 /////////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////////
-// нейтральный (по умолчанию используемый системой) resources
+// Neutral (the system's default) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEUSD)
 #ifdef _WIN32
@@ -65,7 +65,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_SYS_DEFAULT
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 2,8,0,0
+ FILEVERSION 3,0,0,0
  PRODUCTVERSION 1,1,0,30
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
@@ -81,11 +81,11 @@ BEGIN
     BEGIN
         BLOCK "000004b0"
         BEGIN
-            VALUE "CompanyName", "World of Gothic RU - Community"
+            VALUE "CompanyName", "AbsintheWorks"
             VALUE "FileDescription", "VDFS32G.DLL"
-            VALUE "FileVersion", "2, 8, 0, 0"
-            VALUE "InternalName", "VirtualFileSystem for Gothic 1,2 - SystemPack"
-            VALUE "LegalCopyright", "(C) 2014, killer-m, MaGoth, KuDeSnik/WoG.RU"
+            VALUE "FileVersion", "3, 0, 0, 0"
+            VALUE "InternalName", "VirtualFileSystem for Gothic 2 - SystemPack and GMP Launcher"
+            VALUE "LegalCopyright", "(C) 2026, Migos, killer-m, MaGoth, KuDeSnik/WoG.RU"
             VALUE "OriginalFilename", "VDFS32G.DLL"
             VALUE "ProductName", "VDFS32G"
             VALUE "ProductVersion", "1.1.0.30"
@@ -97,7 +97,7 @@ BEGIN
     END
 END
 
-#endif    // нейтральный (по умолчанию используемый системой) resources
+#endif    // Neutral (the system's default) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

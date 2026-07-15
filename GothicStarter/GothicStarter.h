@@ -29,20 +29,17 @@
 
 /*//////////////////////////////////////////////////////////////////////////////
 //
-//  Windows Versions
+//  Windows Versions (updated)
 */
 
 #ifndef WINVER
-#define WINVER 0x0400
-/* This program requires shell version 4.71! (IE >= 4.0) */
-#endif
-#ifndef _WIN32_IE
-#define _WIN32_IE 0x0400
-/* This program requires shell version 4.71! (IE >= 4.0) */
+#define WINVER 0x0A00 // Windows 10
 #endif
 #ifndef _WIN32_WINNT
-#define _WIN32_WINNT 0x0500
-/* This program requires Windows 2000! (NT-based system) */
+#define _WIN32_WINNT 0x0A00 // Windows 10
+#endif
+#ifndef _WIN32_IE
+#define _WIN32_IE 0x0A00 // Internet Explorer 10+
 #endif
 
 /*//////////////////////////////////////////////////////////////////////////////

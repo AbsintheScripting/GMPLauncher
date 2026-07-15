@@ -1,0 +1,6 @@
+[submodule "Vdfs32g/lib/vorbis"]
+	path = Vdfs32g/lib/vorbis
+	url = https://gitlab.xiph.org/xiph/vorbis.git
+[submodule "Vdfs32g/lib/ogg"]
+	path = Vdfs32g/lib/ogg
+	url = https://gitlab.xiph.org/xiph/ogg.git

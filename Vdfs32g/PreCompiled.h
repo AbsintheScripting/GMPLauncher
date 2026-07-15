@@ -36,9 +36,6 @@ using namespace COMMON;
 #include "Vdfs/Flows/VdfFlow.h"
 
 #include <vorbis/vorbisfile.h>
-#pragma comment(lib, "libogg.lib")
-#pragma comment(lib, "libvorbis_static.lib")
-#pragma comment(lib, "libvorbisfile_static.lib")
 #include "Vdfs/Filters/OggFilter.h"
 
 #include "Vdfs/Vdfs.h"
