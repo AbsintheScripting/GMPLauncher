@@ -2,12 +2,14 @@
 
 namespace COMMON
 {
+	// FloatDivRemainder: compute the remainder of floating-point division (num - div * floor(num/div))
 	float FloatDivRemainder(const float num, const float div)
 	{
 		int integer = static_cast<int>(num / div);
 		return (num - (div * integer));
 	}
 
+	// NearestToPower2: find the nearest power of 2 to the given value
 	uInt NearestToPower2(const uInt Value)
 	{
 		uInt i = 1;
@@ -17,6 +19,7 @@ namespace COMMON
 		return ((i - Value) == 0) ? Value : ((i - Value) >= i >> 2) ? i >>= 1 : i;
 	}
 
+	// GetFirstSetBit: find the index of the first zero bit (bitwise NOT scan) in a uInt
 	uInt GetFirstSetBit(uInt Value)
 	{
 		Value ^= 0xFFFFFFFF;
@@ -29,6 +32,7 @@ namespace COMMON
 		return 32;
 	}
 
+	// GetCountSetBit: count the number of set bits in a uInt
 	uInt GetCountSetBit(const uInt Value)
 	{
 		uInt Result = 0;
@@ -40,6 +44,7 @@ namespace COMMON
 		return Result;
 	}
 
+	// Crc8Table: precomputed 8-bit CRC lookup table
 	const uChar Crc8Table[256] =
 	{
 		0x00, 0x07, 0x0E, 0x09, 0x1C, 0x1B, 0x12, 0x15,
@@ -76,6 +81,7 @@ namespace COMMON
 		0xE6, 0xE1, 0xE8, 0xEF, 0xFA, 0xFD, 0xF4, 0xF3
 	};
 
+	// Crc8: compute 8-bit CRC using a precomputed lookup table
 	uChar Crc8(const uChar* buf, uInt len, uChar crc)
 	{
 		while (len--)
@@ -84,6 +90,7 @@ namespace COMMON
 		return crc;
 	}
 
+	// Crc16Table: precomputed 16-bit CRC lookup table
 	const uShort Crc16Table[256] =
 	{
 		0x0000, 0xC0C1, 0xC181, 0x0140, 0xC301, 0x03C0, 0x0280, 0xC241,
@@ -120,6 +127,7 @@ namespace COMMON
 		0x8201, 0x42C0, 0x4380, 0x8341, 0x4100, 0x81C1, 0x8081, 0x4040
 	};
 
+	// Crc16: compute 16-bit CRC using a precomputed lookup table
 	uShort Crc16(const uChar* buf, uInt len, uShort crc)
 	{
 		while (len--)
@@ -128,6 +136,7 @@ namespace COMMON
 		return crc;
 	}
 
+	// Crc32Table: precomputed 32-bit CRC lookup table
 	constexpr uLong Crc32Table[256] =
 	{
 		0x00000000UL, 0x77073096UL, 0xee0e612cUL, 0x990951baUL, 0x076dc419UL,
@@ -184,6 +193,7 @@ namespace COMMON
 		0x2d02ef8dUL
 	};
 
+	// Crc32: compute 32-bit CRC using a precomputed lookup table
 	uLong Crc32(const uChar* buf, uInt len, uLong crc)
 	{
 		crc ^= 0xFFFFFFFFUL;
@@ -194,6 +204,7 @@ namespace COMMON
 		return crc ^ 0xFFFFFFFFUL;
 	}
 
+	// Encrypt8: simple byte-addition encryption with a single-byte key
 	bool Encrypt8(uChar* buf, const uLong len, const uChar* pass)
 	{
 		if (pass)
@@ -207,6 +218,7 @@ namespace COMMON
 		return false;
 	}
 
+	// Decrypt8: simple byte-subtraction decryption with a single-byte key
 	bool Decrypt8(uChar* buf, const uLong len, const uChar* pass)
 	{
 		if (pass)
@@ -220,6 +232,7 @@ namespace COMMON
 		return false;
 	}
 
+	// Encrypt8v2: byte-addition encryption cycling through a multi-byte key
 	bool Encrypt8v2(uChar* buf, uLong len, const uChar* pass)
 	{
 		if (pass)
@@ -237,6 +250,7 @@ namespace COMMON
 		return false;
 	}
 
+	// Decrypt8v2: byte-subtraction decryption cycling through a multi-byte key
 	bool Decrypt8v2(uChar* buf, uLong len, const uChar* pass)
 	{
 		if (pass)
@@ -254,8 +268,7 @@ namespace COMMON
 		return false;
 	}
 
-	// crt strings extensions
-
+	// _strnstr: find the first occurrence of a substring (length-limited) in a string
 	const char* _strnstr(const char* _Str, const char* _SubStr, const size_t _SubStrLen)
 	{
 		for (; *_Str; _Str++)
@@ -274,6 +287,7 @@ namespace COMMON
 		return nullptr;
 	}
 
+	// _strnistr: case-insensitive version of _strnstr
 	const char* _strnistr(const char* _Str, const char* _SubStr, const size_t _SubStrLen)
 	{
 		for (; *_Str; _Str++)
@@ -292,6 +306,7 @@ namespace COMMON
 		return nullptr;
 	}
 
+	// _strrnstr: find the last occurrence of a substring within a length-limited string
 	const char* _strrnstr(const char* _Str, const char* _SubStr, const size_t _StrLen, const size_t _SubStrLen)
 	{
 		if (!_Str || !_SubStr || !_StrLen || !_SubStrLen)
@@ -313,6 +328,7 @@ namespace COMMON
 		return nullptr;
 	}
 
+	// _wcsnstr: wide-char version of _strnstr
 	const wchar_t* _wcsnstr(const wchar_t* _Str, const wchar_t* _SubStr, const size_t _SubStrLen)
 	{
 		for (; *_Str; _Str++)
@@ -331,6 +347,7 @@ namespace COMMON
 		return nullptr;
 	}
 
+	// _wcsnistr: case-insensitive wide-char version of _wcsnstr
 	const wchar_t* _wcsnistr(const wchar_t* _Str, const wchar_t* _SubStr, const size_t _SubStrLen)
 	{
 		for (; *_Str; _Str++)
@@ -349,6 +366,7 @@ namespace COMMON
 		return nullptr;
 	}
 
+	// _wcsrnstr: find the last occurrence of a wide-char substring within a length-limited string
 	const wchar_t* _wcsrnstr(const wchar_t* _Str, const wchar_t* _SubStr, const size_t _StrLen, const size_t _SubStrLen)
 	{
 		if (!_Str || !_SubStr || !_StrLen || !_SubStrLen)
@@ -370,8 +388,7 @@ namespace COMMON
 		return nullptr;
 	}
 
-	// Mem extensions
-
+	// _memstr: find the first occurrence of a byte pattern in a memory buffer
 	const uChar* _memstr(const uChar* buffer, const size_t bufsize, const uChar* str, const size_t strsize)
 	{
 		for (size_t b = 0; b <= (bufsize - strsize); b++)
@@ -387,6 +404,7 @@ namespace COMMON
 		return nullptr;
 	}
 
+	// _memrstr: find the last occurrence of a byte pattern in a memory buffer
 	const uChar* _memrstr(const uChar* buffer, const size_t bufsize, const uChar* str, const size_t strsize)
 	{
 		if (bufsize >= strsize)
@@ -405,8 +423,7 @@ namespace COMMON
 		return nullptr;
 	}
 
-	// UtilityEx
-
+	// PlatformGetComputerName: get the local computer name via Windows API
 	bool PlatformGetComputerName(TString& name)
 	{
 		DWORD Size = 0;
@@ -420,16 +437,19 @@ namespace COMMON
 		return false;
 	}
 
+	// PlatformGetCurrentProcessId: wrap GetCurrentProcessId and cast to uInt
 	uInt PlatformGetCurrentProcessId()
 	{
 		return static_cast<uInt>(GetCurrentProcessId());
 	}
 
+	// PlatformGetCurrentThreadId: wrap GetCurrentThreadId and cast to uInt
 	uInt PlatformGetCurrentThreadId()
 	{
 		return static_cast<uInt>(GetCurrentThreadId());
 	}
 
+	// PlatformGetWorkPath: get the current working directory path
 	bool PlatformGetWorkPath(TString& path)
 	{
 		uInt Size = GetCurrentDirectory(0, nullptr);
@@ -441,6 +461,7 @@ namespace COMMON
 		return false;
 	}
 
+	// PlatformGetTempPath: get the system temporary directory path
 	bool PlatformGetTempPath(TString& path)
 	{
 		path.Resize(MAX_PATH);
@@ -459,6 +480,7 @@ namespace COMMON
 		return true;
 	}
 
+	// PlatformGetTempFileName: generate a unique temporary file name in the temp directory
 	bool PlatformGetTempFileName(TString& name)
 	{
 		TString Path;
@@ -485,6 +507,7 @@ namespace COMMON
 		return false;
 	}
 
+	// PlatformGetExePath: get the full path to the current executable module
 	bool PlatformGetExePath(TString& name)
 	{
 		SetLastError(ERROR_INSUFFICIENT_BUFFER);
@@ -500,6 +523,7 @@ namespace COMMON
 		return (name.Length() != 0);
 	}
 
+	// PlatformReadTextFile: read a text file handling BOM-encoded UTF-16LE/UTF-8/ANSI
 	bool PlatformReadTextFile(const TString& file, TStringArray& lines)
 	{
 		FILE* fp = _tfopen(file, _T("rb"));

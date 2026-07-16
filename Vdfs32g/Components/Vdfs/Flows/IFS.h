@@ -1,11 +1,14 @@
 #ifndef _IFS_
 #define _IFS_
 
+// VDFS_BUFFER_SIZE: size of the internal read buffer for streaming data reads
 #define VDFS_BUFFER_SIZE 10000
 
+// IFS stream type constants
 #define IFS_TYPE_STDIO	1
 #define IFS_TYPE_VDF	2
 
+// IfsBase: abstract base interface for file stream operations without reference counting
 class IfsBase : public Object
 {
 public:
@@ -16,9 +19,11 @@ public:
 	virtual void Close() = 0;
 };
 
+// IFS: abstract file stream with reference counting, buffered reads, and virtual file system integration
 class IFS : public IfsBase
 {
 protected:
+	// IfsBuffer: internal 10KB read buffer for sequential access optimization
 	class IfsBuffer
 	{
 	public:
@@ -149,14 +154,17 @@ inline uLong IFS::GetData(void* buffer, uLong size)
 	return size;
 }
 
+// Smart pointer type for IFS streams with automatic reference counting
 using IfsPtr = AutoPtr<IFS>;
 
+// IfsFilter: abstract interface for chaining transformations over IFS streams (e.g. OGG-to-WAV)
 class IfsFilter : public IfsBase
 {
 public:
 	virtual IfsFilter* Open(IFS* src) = 0;
 };
 
+// Smart pointer type for IFS filters
 using IfsFilterPtr = AutoPtr<IfsFilter>;
 
 #endif

@@ -3,9 +3,11 @@
 
 class IFS;
 
+// VdfsIndex: stores file metadata (name, size, offset, flow pointer) in hash tables for fast lookup
 class VdfsIndex final : public Object
 {
 public:
+	// FileInfo: stores metadata for a single file entry (name, size, flow pointer, offset)
 	class FileInfo final : public Object
 	{
 	public:

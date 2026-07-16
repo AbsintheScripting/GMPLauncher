@@ -3,6 +3,7 @@
 
 namespace COMMON
 {
+	// Fixed-width unsigned integer type aliases for cross-platform compatibility
 	using Byte = unsigned char;
 	using uChar = unsigned char;
 
@@ -17,6 +18,7 @@ namespace COMMON
 	using uLong = unsigned long;
 	using uShort = unsigned short;
 
+	// Cast shorthand macros for common C++ cast operations
 #define dcast dynamic_cast
 #define rcast reinterpret_cast
 #define scast static_cast
@@ -24,7 +26,7 @@ namespace COMMON
 
 #define COMMON_MAX_PATH 256
 
-	// TCHAR extensions
+	// TCHAR extension macros: map _t* functions to ANSI/WIDE equivalents based on UNICODE define
 #ifdef _UNICODE
 #define _ttof _wtof
 #define _ttoi _wtoi

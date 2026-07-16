@@ -1,6 +1,7 @@
 #ifndef _VDFS_
 #define _VDFS_
 
+// Vdfs: main virtual file system class that manages physical and virtual (VDF/MOD) file flows with filtering
 class Vdfs final : public Object
 {
 protected:

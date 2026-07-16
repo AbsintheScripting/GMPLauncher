@@ -1,5 +1,6 @@
 #include "PreCompiled.h"
 
+// UpdateFileIndex: add or update a file entry in the index, preventing duplicates
 bool StdFlow::UpdateFileIndex(const AString& file, const uInt size, const bool failifexists, VdfsIndex* index)
 {
 	if (!index->FullIndexes[file])
@@ -29,6 +30,7 @@ bool StdFlow::UpdateFileIndex(const AString& file, const uInt size, const bool f
 	return false;
 }
 
+// BuildIndex: recursively scan a directory tree and add all files to the index
 uInt StdFlow::BuildIndex(const TCHAR* dir, VdfsIndex* index)
 {
 	uInt result = 0;
@@ -75,6 +77,7 @@ uInt StdFlow::BuildIndex(const TCHAR* dir, VdfsIndex* index)
 	return result;
 }
 
+// GetFileInfo: open a file and return its FileInfo with size information
 VdfsIndex::FileInfo* StdFlow::GetFileInfo(const AString& filename)
 {
 	HANDLE hFile = CreateFileA(&filename.GetData()[1],
@@ -97,11 +100,13 @@ VdfsIndex::FileInfo* StdFlow::GetFileInfo(const AString& filename)
 	return nullptr;
 }
 
+// FileExists: check if a physical file exists on disk
 bool StdFlow::FileExists(const AString& filename)
 {
 	return (PathFileExistsA(&filename.GetData()[1]) == TRUE);
 }
 
+// UpdateIndex: build index from _work\ directory and allocate two stream slots
 bool StdFlow::UpdateIndex(VdfsIndex* index)
 {
 	BuildIndex(_T("_work\\"), index);
@@ -110,6 +115,7 @@ bool StdFlow::UpdateIndex(VdfsIndex* index)
 	return true;
 }
 
+// GetFreeStream: find an unused stream or allocate a new one
 StdFlow* StdFlow::GetFreeStream()
 {
 	for (uInt i = 0; i < Streams.Size(); i++)
@@ -120,6 +126,7 @@ StdFlow* StdFlow::GetFreeStream()
 	return Streams.Add(new StdFlow());
 }
 
+// Open: open a file stream from this StdFlow if the fileinfo belongs to it
 IFS* StdFlow::Open(VdfsIndex::FileInfoPtr& fileinfo)
 {
 	if (fileinfo && (fileinfo->Flow == this))
@@ -131,6 +138,7 @@ IFS* StdFlow::Open(VdfsIndex::FileInfoPtr& fileinfo)
 	return nullptr;
 }
 
+// Read: read data from the file handle at the specified offset
 uLong StdFlow::Read(const uLong offset, void* buffer, const uLong size)
 {
 	if (FileHandle != INVALID_HANDLE_VALUE)
@@ -143,6 +151,7 @@ uLong StdFlow::Read(const uLong offset, void* buffer, const uLong size)
 	return 0;
 }
 
+// Close: close the file handle and call the base class Close
 void StdFlow::Close()
 {
 	if (FileHandle != INVALID_HANDLE_VALUE)
@@ -153,6 +162,7 @@ void StdFlow::Close()
 	IFS::Close();
 }
 
+// Init: open a file handle for the given fileinfo entry
 bool StdFlow::Init(VdfsIndex::FileInfoPtr& fileinfo)
 {
 	if ((FileHandle != INVALID_HANDLE_VALUE) || CurrentFileInfo)

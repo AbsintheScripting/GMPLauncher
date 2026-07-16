@@ -1,7 +1,9 @@
 #include "PreCompiled.h"
 
+// Stores named memory blocks allocated by MemBlocks INI section for patch targets
 TaggedArray<uChar*, AString> MemoryBlocks;
 
+// PatchPtr: patch a pointer-sized value by absolute address or section scan with optional origin check
 bool PatchPtr(AString& section, TaggedArray<AString, AString>& params)
 {
 	bool CheckOrg = false;
@@ -60,6 +62,7 @@ bool PatchPtr(AString& section, TaggedArray<AString, AString>& params)
 	return true;
 }
 
+// PatchInt: patch an integer value with NewVar/NewMul/NewAdd/NewMin/NewMax modifiers and optional origin check
 bool PatchInt(AString& section, TaggedArray<AString, AString>& params)
 {
 	bool CheckOrg = false;
@@ -157,6 +160,7 @@ bool PatchInt(AString& section, TaggedArray<AString, AString>& params)
 	return true;
 }
 
+// PatchFloat: patch a float value with NewVar/NewMul/NewAdd/NewMin/NewMax modifiers and optional origin check
 bool PatchFloat(AString& section, TaggedArray<AString, AString>& params)
 {
 	bool CheckOrg = false;
@@ -254,6 +258,7 @@ bool PatchFloat(AString& section, TaggedArray<AString, AString>& params)
 	return true;
 }
 
+// PatchHex: patch arbitrary bytes from hex string or ANSI string with optional Org fill pattern
 bool PatchHex(AString& section, TaggedArray<AString, AString>& params)
 {
 	Array<uChar> Org;
@@ -342,6 +347,7 @@ bool PatchHex(AString& section, TaggedArray<AString, AString>& params)
 	return true;
 }
 
+// ApplyPatch: read .patch INI file and apply ConVars, MemBlocks, and all patch sections sequentially
 bool ApplyPatch(const TString& filename)
 {
 	AStringArray Sections;
@@ -526,6 +532,7 @@ using PROCESS_DPI_AWARENESS = enum PROCESS_DPI_AWARENESS
 using SetProcessDpiAwarenessPtr = HRESULT(STDAPICALLTYPE*)(PROCESS_DPI_AWARENESS value);
 using GetProcessDpiAwarenessPtr = HRESULT(STDAPICALLTYPE*)(HANDLE hprocess, PROCESS_DPI_AWARENESS* value);
 
+// SetProcessDpiAwareness: dynamically load and call shcore.dll SetProcessDpiAwareness for Win8.1+
 HRESULT SetProcessDpiAwareness(const PROCESS_DPI_AWARENESS value)
 {
 	HRESULT hResult = S_FALSE;
@@ -540,6 +547,7 @@ HRESULT SetProcessDpiAwareness(const PROCESS_DPI_AWARENESS value)
 	return hResult;
 }
 
+// GetProcessDpiAwareness: dynamically load and call shcore.dll GetProcessDpiAwareness for Win8.1+
 HRESULT GetProcessDpiAwareness(const HANDLE hprocess, PROCESS_DPI_AWARENESS* value)
 {
 	HRESULT hResult = S_FALSE;
@@ -556,6 +564,7 @@ HRESULT GetProcessDpiAwareness(const HANDLE hprocess, PROCESS_DPI_AWARENESS* val
 
 using SetProcessDPIAwarePtr = BOOL(WINAPI*)();
 
+// SafeSetProcessDPIAware: dynamically load and call user32.dll SetProcessDPIAware as fallback for Win7
 BOOL SafeSetProcessDPIAware()
 {
 	BOOL hResult = FALSE;
@@ -570,10 +579,12 @@ BOOL SafeSetProcessDPIAware()
 	return hResult;
 }
 
+// CRC values used to locate the correct .patch file for the current game executable
 uLong ExeCRC = 0;
 uLong CodeCRC = 0;
 TString PatchFileName;
 
+// InstallKillerFix: set DPI awareness, locate and apply the CRC-matched .patch file from disk or VDF
 bool InstallKillerFix()
 {
 	if (IsWindows8Point1OrGreater())
@@ -669,6 +680,7 @@ bool InstallKillerFix()
 	return Result;
 }
 
+// RemoveKillerFix: free all memory blocks allocated during patch installation
 void RemoveKillerFix()
 {
 	for (uInt b = 0; b < MemoryBlocks.Size(); b++)

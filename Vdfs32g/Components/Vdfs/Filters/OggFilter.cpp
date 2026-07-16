@@ -1,5 +1,6 @@
 #include "PreCompiled.h"
 
+// GetFreeStream: find an unused filter stream or allocate a new one
 OggFilter* OggFilter::GetFreeStream()
 {
 	for (uInt i = 0; i < Streams.Size(); i++)
@@ -10,6 +11,7 @@ OggFilter* OggFilter::GetFreeStream()
 	return Streams.Add(new OggFilter());
 }
 
+// Open: check if the source stream is OGG Vorbis and attach a filter if so
 IfsFilter* OggFilter::Open(IFS* src)
 {
 	TString Ext(src->GetName());
@@ -31,6 +33,7 @@ IfsFilter* OggFilter::Open(IFS* src)
 	return nullptr;
 }
 
+// Attach: initialize vorbis_file for an OGG source and populate the virtual WAV header
 bool OggFilter::Attach(IFS* src)
 {
 	if (!ov_open_callbacks(src, &Vorbis, nullptr, 0, Callbacks) && (ov_streams(&Vorbis) == 1))
@@ -53,16 +56,19 @@ bool OggFilter::Attach(IFS* src)
 	return false;
 }
 
+// GetFileSize: return the size of the virtual WAV header plus decoded audio data
 uLong OggFilter::GetFileSize() const
 {
 	return Wave.Header.RiffSize + 8;
 }
 
+// GetOffset: return the current read offset in the virtual WAV stream
 uLong OggFilter::GetOffset() const
 {
 	return Offset;
 }
 
+// SetOffset: set the read offset, rejecting values beyond the virtual WAV size
 bool OggFilter::SetOffset(const uLong offset)
 {
 	if (offset > GetFileSize())
@@ -71,6 +77,7 @@ bool OggFilter::SetOffset(const uLong offset)
 	return true;
 }
 
+// GetData: return WAV header bytes first, then decode OGG Vorbis audio data on demand
 uLong OggFilter::GetData(void* buffer, const uLong size)
 {
 	auto Buffer = static_cast<char*>(buffer);
@@ -133,6 +140,7 @@ uLong OggFilter::GetData(void* buffer, const uLong size)
 	return size;
 }
 
+// Close: clear the vorbis file and close the source stream
 void OggFilter::Close()
 {
 	if (Vorbis.datasource)
@@ -146,6 +154,7 @@ void OggFilter::Close()
 	}
 }
 
+// vorbis_read: ogg_callbacks read_func that delegates to the IFS stream
 size_t vorbis_read(void* ptr, const size_t size, size_t nmemb, void* datasource)
 {
 	auto FS = static_cast<IFS*>(datasource);
@@ -164,6 +173,7 @@ size_t vorbis_read(void* ptr, const size_t size, size_t nmemb, void* datasource)
 	return 0;
 }
 
+// vorbis_seek: ogg_callbacks seek_func that translates to IFS SetOffset
 int vorbis_seek(void* datasource, const ogg_int64_t offset, const int whence)
 {
 	auto FS = static_cast<IFS*>(datasource);
@@ -182,17 +192,20 @@ int vorbis_seek(void* datasource, const ogg_int64_t offset, const int whence)
 	return static_cast<int>(FS->GetOffset());
 }
 
+// vorbis_close: ogg_callbacks close_func (no-op, source lifecycle managed by OggFilter)
 int vorbis_close(void* datasource)
 {
 	return 0;
 }
 
+// vorbis_tell: ogg_callbacks tell_func that returns the current IFS offset
 long vorbis_tell(void* datasource)
 {
 	auto FS = static_cast<IFS*>(datasource);
 	return static_cast<long>(FS->GetOffset());
 }
 
+// OggFilter constructor: initialize vorbis callbacks and populate the default WAV header
 OggFilter::OggFilter()
 {
 	Source = nullptr;

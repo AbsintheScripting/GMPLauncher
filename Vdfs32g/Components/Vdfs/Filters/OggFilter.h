@@ -2,6 +2,7 @@
 #define _OGG_FILTER_
 
 #pragma pack(push, 1)
+// WaveFileHeader: RIFF/WAV file header (12 bytes)
 struct WaveFileHeader
 {
 	uChar RIFF_SIG[4];
@@ -11,6 +12,7 @@ struct WaveFileHeader
 #pragma pack(pop)
 
 #pragma pack(push, 1)
+// RiffChunk: RIFF chunk header with 4-byte name and 4-byte size
 struct RiffChunk
 {
 	uChar CHUNK_NAME[4];
@@ -19,6 +21,7 @@ struct RiffChunk
 #pragma pack(pop)
 
 #pragma pack(push, 1)
+// WaveFormatEx: WAV format chunk describing audio sample format
 struct WaveFormatEx
 {
 	uShort FormatTag;
@@ -31,6 +34,7 @@ struct WaveFormatEx
 #pragma pack(pop)
 
 #pragma pack(push, 1)
+// WaveFile: complete WAV file header structure (fmt + data chunks + RIFF header)
 struct WaveFile
 {
 	WaveFileHeader Header;
@@ -41,6 +45,7 @@ struct WaveFile
 #pragma pack(pop)
 
 
+// OggFilter: transforms OGG Vorbis streams into virtual WAV streams on-the-fly
 class OggFilter final : public IfsFilter
 {
 protected:

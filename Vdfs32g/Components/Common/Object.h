@@ -3,6 +3,7 @@
 
 namespace COMMON
 {
+	// Object: base class with reference counting (Save/Release pattern) and user data storage
 	class Object
 	{
 		int Reference;
@@ -88,6 +89,7 @@ namespace COMMON
 		}
 	};
 
+	// AutoPtr: smart pointer that automatically calls Save/Release on Object-derived pointers
 	template <class type>
 	class AutoPtr
 	{
@@ -222,6 +224,7 @@ namespace COMMON
 		}
 	};
 
+	// TunablePtr: smart pointer with optional auto-release (Auto mode) for flexible lifetime control
 	template <class type>
 	class TunablePtr
 	{

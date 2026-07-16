@@ -1,6 +1,7 @@
 #ifndef _ARE_COM_PTR_
 #define _ARE_COM_PTR_
 
+// ComPtr: smart pointer wrapper for COM interfaces with automatic AddRef/Release and QueryInterface support
 template<class type>
 class ComPtr
 {

@@ -3,6 +3,7 @@
 
 namespace COMMON
 {
+// Platform and architecture detection macros
 #ifdef _M_IX86
 #define COMMON_PLATFORM "Win32"
 #define COMMON_ARCH "x86"
@@ -21,6 +22,7 @@ namespace COMMON
 #define NONE_TEXT (const TCHAR*)0
 #define END_TEXT (const TCHAR*)1
 
+// Math utility macros: rounding, absolute value, square, min/max, clamp, bit shift
 #define ROUND(a)				((a < 0) ? floor(a) : ceil(a))
 #define ABS(a)					((a < 0) ? -(a) : a)
 #define SQR(x)					((x) * (x))
@@ -29,9 +31,11 @@ namespace COMMON
 #define CLAMP(min, value, max)	((value < max) ? ((value > min) ? value : min) : max)
 #define BIT(n)					(1 << n)
 
+// NUM_VER: pack 4 version components into a single uInt for comparison
 #define NUM_VER(v1,v2,v3,v4) \
 	((v1 << 28) + (v2 << 24) + (v3 << 16) + v4)
 
+// ASTR_VER/WSTR_VER/TSTR_VER: unpack a NUM_VER uInt into an ANSI/WIDE/TCHAR version string
 #define ASTR_VER(ver) \
 	(AString(ver >> 28) + AString(".") + AString((ver << 4) >> 28) + AString(".") \
 	+ AString((ver << 8) >> 24) + AString(".") + AString((ver << 16) >> 16))
@@ -44,11 +48,12 @@ namespace COMMON
 	(TString(ver >> 28) + TString(_T(".")) + TString((ver << 4) >> 28) + TString(_T(".")) \
 	+ TString((ver << 8) >> 24) + TString(_T(".")) + TString((ver << 16) >> 16))
 
+// MAKE_FOURCC: pack 4 characters into a uInt identifier (e.g. 'RIFF')
 #define MAKE_FOURCC(ch0, ch1, ch2, ch3) \
     ((uInt)(uChar)(ch0) | ((uInt)(uChar)(ch1) << 8) | \
     ((uInt)(uChar)(ch2) << 16) | ((uInt)(uChar)(ch3) << 24 ));
 
-	// Common functions
+	// Common utility functions: math, CRC, encryption, string/mem operations, platform APIs
 	extern float FloatDivRemainder(float num, float div);
 	extern uInt NearestToPower2(uInt Value);
 

@@ -1,10 +1,14 @@
 #include "PreCompiled.h"
 
+// Handle to the loaded ddraw.dll module
 HMODULE hDDraw = nullptr;
+// Backup of the original DirectDrawCreateEx function bytes for restoration
 static uChar Bak[5] = {};
 
+// Function pointer type for DirectDrawEnumerateExA from ddraw.dll
 using DirectDrawEnumerateExAPtr = HRESULT(WINAPI*)(LPVOID lpCallback, LPVOID lpContext, DWORD dwFlags);
 
+// MyDirectDrawEnumerateExA: restore original DirectDrawCreateEx bytes before calling the real DirectDrawEnumerateExA
 HRESULT WINAPI MyDirectDrawEnumerateExA(const LPVOID lpCallback, const LPVOID lpContext, const DWORD dwFlags)
 {
 	const uChar* codeBase = (uChar*)GetModuleHandle(nullptr);
@@ -27,6 +31,7 @@ HRESULT WINAPI MyDirectDrawEnumerateExA(const LPVOID lpCallback, const LPVOID lp
 	return S_OK;
 }
 
+// InstallSteamOverlayFix: patch ddraw.dll DirectDrawEnumerateExA import to fix Steam overlay crashes
 bool InstallSteamOverlayFix()
 {
 	char SteamOverlayFix[256];

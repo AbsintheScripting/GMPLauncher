@@ -1,6 +1,7 @@
 #ifndef _STD_FLOW_
 #define _STD_FLOW_
 
+// StdFlow: physical file system stream backed by Windows HANDLEs for direct file I/O
 class StdFlow final : public IFS
 {
 protected:

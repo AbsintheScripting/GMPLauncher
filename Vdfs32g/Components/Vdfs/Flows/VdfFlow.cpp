@@ -1,5 +1,6 @@
 #include "PreCompiled.h"
 
+// BuildVdfsIndex: recursively parse VDF catalog entries and build the file index
 uInt VdfFlow::BuildVdfsIndex(VdfsIndex* index, VdfEntryInfo* Entries, const uInt BeginNum, const char* Directory)
 {
 	uInt result = 0;
@@ -57,6 +58,7 @@ uInt VdfFlow::BuildVdfsIndex(VdfsIndex* index, VdfEntryInfo* Entries, const uInt
 	return result;
 }
 
+// UpdateIndex: read the VDF root catalog and build the complete file index for this archive
 bool VdfFlow::UpdateIndex(VdfsIndex* index)
 {
 	if (Archive)
@@ -86,6 +88,7 @@ bool VdfFlow::UpdateIndex(VdfsIndex* index)
 	return false;
 }
 
+// GetFreeStream: find an unused stream or allocate a new one
 VdfFlow* VdfFlow::GetFreeStream()
 {
 	for (uInt i = 0; i < Streams.Size(); i++)
@@ -96,6 +99,7 @@ VdfFlow* VdfFlow::GetFreeStream()
 	return Streams.Add(new VdfFlow());
 }
 
+// Open: open a file stream from this VDF archive if the fileinfo belongs to it
 IFS* VdfFlow::Open(VdfsIndex::FileInfoPtr& fileinfo)
 {
 	if (fileinfo && (fileinfo->Flow == this))
@@ -107,6 +111,7 @@ IFS* VdfFlow::Open(VdfsIndex::FileInfoPtr& fileinfo)
 	return nullptr;
 }
 
+// Read: read data from the VDF archive at the specified file offset
 uLong VdfFlow::Read(const uLong offset, void* buffer, const uLong size)
 {
 	if (CurrentFileInfo)
@@ -121,6 +126,7 @@ uLong VdfFlow::Read(const uLong offset, void* buffer, const uLong size)
 	return 0;
 }
 
+// Init: open a VDF archive file, verify its header signature, and seek to the root catalog
 bool VdfFlow::Init(const TCHAR* arcname)
 {
 	if (Archive != INVALID_HANDLE_VALUE)
@@ -162,6 +168,7 @@ bool VdfFlow::Init(const TCHAR* arcname)
 	return false;
 }
 
+// Init: open an already-mounted VDF archive for a specific fileinfo entry
 bool VdfFlow::Init(const TCHAR* arcname, VdfsIndex::FileInfoPtr& fileinfo)
 {
 	if (CurrentFileInfo)
@@ -191,6 +198,7 @@ bool VdfFlow::Init(const TCHAR* arcname, VdfsIndex::FileInfoPtr& fileinfo)
 	return false;
 }
 
+// VdfFlow constructor: initialize all members to null/invalid state
 VdfFlow::VdfFlow()
 {
 	Archive = INVALID_HANDLE_VALUE;
@@ -199,6 +207,7 @@ VdfFlow::VdfFlow()
 	Version = 0;
 }
 
+// VdfFlow destructor: close the stream and archive handle, clear header
 VdfFlow::~VdfFlow()
 {
 	Close();

@@ -1,5 +1,6 @@
 #include "PreCompiled.h"
 
+// ExtractSplash: extract SPLASH.BMP from the VDF archive to a temp file
 bool ExtractSplash(TString& name)
 {
 	bool Result = false;
@@ -43,6 +44,7 @@ bool ExtractSplash(TString& name)
 	return Result;
 }
 
+// MyLoadBitmapA: hooked LoadBitmapA that intercepts bitmap ID 169 and loads custom splash.bmp instead
 HBITMAP WINAPI MyLoadBitmapA(const HINSTANCE hInstance, LPCSTR lpBitmapName)
 {
 	if ((uInt)lpBitmapName == 169)
@@ -63,6 +65,7 @@ HBITMAP WINAPI MyLoadBitmapA(const HINSTANCE hInstance, LPCSTR lpBitmapName)
 	return LoadBitmapA(hInstance, lpBitmapName);
 }
 
+// InstallSplashFix: patch USER32.dll LoadBitmapA import to redirect bitmap ID 169 to custom splash
 bool InstallSplashFix()
 {
 	const uChar* codeBase = (uChar*)GetModuleHandle(nullptr);
@@ -72,5 +75,6 @@ bool InstallSplashFix()
 	return true;
 }
 
+// RemoveSplashFix: no cleanup needed for the splash fix
 void RemoveSplashFix()
 {}

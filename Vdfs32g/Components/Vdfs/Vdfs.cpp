@@ -1,5 +1,6 @@
 #include "PreCompiled.h"
 
+// FileExist: check if a file exists in virtual or physical storage, respecting VDF_PHYSICALFIRST flag
 long Vdfs::FileExist(const char* filename, const long flags)
 {
 	if (flags & VDF_PACKED)
@@ -38,6 +39,7 @@ long Vdfs::FileExist(const char* filename, const long flags)
 	return 0;
 }
 
+// SearchFile: case-insensitive file search in the VDFS index, returns full canonical path
 bool Vdfs::SearchFile(const char* filename, char* fullname)
 {
 	EnterCriticalSection(&CS);
@@ -49,6 +51,7 @@ bool Vdfs::SearchFile(const char* filename, char* fullname)
 	return Result;
 }
 
+// ApplyFilter: chain all registered filters (e.g. OggFilter) over a source IFS stream
 IfsBase* Vdfs::ApplyFilter(IFS* src)
 {
 	for (uInt f = 0; src && (f < Filters.Size()); f++)
@@ -60,6 +63,7 @@ IfsBase* Vdfs::ApplyFilter(IFS* src)
 	return src;
 }
 
+// OpenFile: open a file from virtual (VDF/MOD) or physical storage with filter chain
 IfsBase* Vdfs::OpenFile(const char* filename, const long flags)
 {
 	if (flags & VDF_PACKED)
@@ -104,6 +108,7 @@ IfsBase* Vdfs::OpenFile(const char* filename, const long flags)
 	return nullptr;
 }
 
+// CloseFile: close a virtual file stream
 void Vdfs::CloseFile(IfsBase* fp)
 {
 	EnterCriticalSection(&CS);
@@ -112,6 +117,7 @@ void Vdfs::CloseFile(IfsBase* fp)
 	LeaveCriticalSection(&CS);
 }
 
+// VdfCompTimeStamp: comparator for sorting VDF flows by modification timestamp (newer first)
 int VdfCompTimeStamp(const IfsPtr& Obj1, const IfsPtr& Obj2, Object* arg)
 {
 	if ((Obj1->GetType() == IFS_TYPE_VDF) && (Obj2->GetType() == IFS_TYPE_VDF))
@@ -127,6 +133,7 @@ int VdfCompTimeStamp(const IfsPtr& Obj1, const IfsPtr& Obj2, Object* arg)
 	return 0;
 }
 
+// EnumDirs: recursively enumerate subdirectories under a path
 void Vdfs::EnumDirs(const TCHAR* dir, TStringArray& dirs, const bool recurse)
 {
 	TString SearchString(dir);
@@ -156,6 +163,7 @@ void Vdfs::EnumDirs(const TCHAR* dir, TStringArray& dirs, const bool recurse)
 		FindClose(hf);
 }
 
+// MountDir: scan a directory for .vdf/.mod files and add them as virtual flows
 void Vdfs::MountDir(const TCHAR* dir, const TCHAR* ext)
 {
 	TStringArray Dirs;
@@ -188,6 +196,7 @@ void Vdfs::MountDir(const TCHAR* dir, const TCHAR* ext)
 	}
 }
 
+// UpdateStdFileIndex: update the physical flow's index for a specific file
 bool Vdfs::UpdateStdFileIndex(const AString& file, const uInt size)
 {
 	if (PhysicalFlow && Index)
@@ -195,6 +204,7 @@ bool Vdfs::UpdateStdFileIndex(const AString& file, const uInt size)
 	return true;
 }
 
+// InitVirtual: mount all .vdf and .mod files from Data/, sort by timestamp, create physical StdFlow and index
 bool Vdfs::InitVirtual()
 {
 	EnterCriticalSection(&CS);
@@ -220,6 +230,7 @@ bool Vdfs::InitVirtual()
 	return true;
 }
 
+// Init: register all filters (e.g. OggFilter), initialize virtual storage, and build the complete file index
 bool Vdfs::Init()
 {
 	EnterCriticalSection(&CS);
@@ -234,6 +245,7 @@ bool Vdfs::Init()
 	return true;
 }
 
+// Clear: release all virtual flows and the physical flow
 void Vdfs::Clear()
 {
 	EnterCriticalSection(&CS);
@@ -242,12 +254,14 @@ void Vdfs::Clear()
 	LeaveCriticalSection(&CS);
 }
 
+// Vdfs constructor: initialize the critical section and set PhysicalFlow to null
 Vdfs::Vdfs()
 {
 	InitializeCriticalSection(&CS);
 	PhysicalFlow = nullptr;
 }
 
+// Vdfs destructor: clear all resources and delete the critical section
 Vdfs::~Vdfs()
 {
 	Clear();
