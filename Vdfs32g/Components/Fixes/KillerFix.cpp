@@ -347,7 +347,7 @@ bool PatchHex(AString& section, TaggedArray<AString, AString>& params)
 	return true;
 }
 
-// ApplyPatch: read .patch INI file and apply ConVars, MemBlocks, and all patch sections sequentially
+// ApplyPatch: read SystemPack.ini or Gothic.ini and apply ConVars, MemBlocks, and all patch sections sequentially
 bool ApplyPatch(const TString& filename)
 {
 	AStringArray Sections;
@@ -612,10 +612,16 @@ bool InstallKillerFix()
 	if (PlatformGetWorkPath(WorkPath) && WorkPath.TruncateBeforeLast(_T("\\")) && WorkPath.Compare(_T("System"), true))
 		ChangeWorkDir = (SetCurrentDirectory(_T("..\\")) == TRUE);
 
-	ExeCRC = GetExeCrc32();
-	CodeCRC = GetSectionCrc32(".text");
-	if (PathFileExists(PatchFileName.Format(_T("Patches\\%X.patch"), ExeCRC)) || PathFileExists(
-		PatchFileName.Format(_T("Patches\\CODE_%X.patch"), CodeCRC)))
+	// Compute CRC (Cyclic Redundancy Check) hashes -- It's a hash function that produces a 32-bit fingerprint of any data
+	// The purpose here is version identification
+	// Simplified example:
+	// Gothic.exe (v1.091116)  →  CRC32 = 0xA3F1B2C4  →  patch file = A3F1B2C4.patch
+	// Gothic.exe (v1.091117)  →  CRC32 = 0x7D2E9F01  →  patch file = 7D2E9F01.patch
+	ExeCRC = GetExeCrc32(); // CRC32 of the entire gothic.exe
+	CodeCRC = GetSectionCrc32(".text"); // CRC32 of the .text (code) section
+	// Check if the .patch is available
+	if (PathFileExists(PatchFileName.Format(_T("Patches\\%X.patch"), ExeCRC))
+		|| PathFileExists(PatchFileName.Format(_T("Patches\\CODE_%X.patch"), CodeCRC)))
 	{
 		Result = true;
 	}
@@ -623,9 +629,8 @@ bool InstallKillerFix()
 	{
 		char TempFileName[256];
 		TempFileName[0] = '\\';
-		if (vdf_searchfile(String().Format("%X.PATCH", ExeCRC), &TempFileName[1]) || vdf_searchfile(
-			String().Format("CODE_%X.PATCH", CodeCRC),
-			&TempFileName[1]))
+		if (vdf_searchfile(String().Format("%X.PATCH", ExeCRC), &TempFileName[1])
+			|| vdf_searchfile(String().Format("CODE_%X.PATCH", CodeCRC), &TempFileName[1]))
 		{
 			const long patch = vdf_fopen(TempFileName, VDF_VIRTUAL);
 			if (patch > 0)
@@ -647,16 +652,17 @@ bool InstallKillerFix()
 			}
 		}
 	}
-
+	// Apply patches if .patch file could be found
+	// The .patch file itself is an INI-formatted file
+	// — it contains sections like [MemBlocks], [ConVars], and patch entries with Type=ptr|int|float|hex
+	// that tell the engine what memory addresses to modify and with what values.
 	if (Result)
 		Result = ApplyPatch(PatchFileName);
 	else
 	{
 		char UnknExeCrc[256];
-		if (!GothicReadIniString("DEBUG", "UnknExeCrc", "0", UnknExeCrc, 256, "SystemPack.ini") || (strtoul(
-			UnknExeCrc,
-			nullptr,
-			16) != ExeCRC))
+		if (!GothicReadIniString("DEBUG", "UnknExeCrc", "0", UnknExeCrc, 256, "SystemPack.ini")
+			|| (strtoul(UnknExeCrc, nullptr, 16) != ExeCRC))
 		{
 			TCHAR Buffer[256];
 			_stprintf_s(Buffer,
