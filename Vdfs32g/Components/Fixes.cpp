@@ -2,6 +2,54 @@
 #include <commctrl.h>
 #pragma comment(lib, "comctl32")
 
+// Tracks whether Multiplayer has been attached
+bool GMPAttached = false;
+
+// Attach Multiplayer if not already done
+bool AttachGMP()
+{
+	if (GMPAttached)
+		return true;
+
+	HMODULE h = LoadLibraryA("gmp.dll");
+	if (!h)
+	{
+		DWORD error = GetLastError();
+
+		RedirectIOToConsole();
+		printf("LoadLibrary failed. Error = %lu\n", error);
+
+		return false;
+	}
+
+	using StartFn = DWORD(WINAPI*)(LPVOID);
+
+	auto start =
+		reinterpret_cast<StartFn>(
+			GetProcAddress(h, "StartGmpWorker"));
+
+	if (!start)
+	{
+		RedirectIOToConsole();
+		printf("Init gmp.dll failed\n");
+		return false;
+	}
+
+	HANDLE hThread = CreateThread(
+		nullptr,
+		0,
+		start,
+		nullptr,
+		0,
+		nullptr);
+
+	WaitForSingleObject(hThread, INFINITE);
+	CloseHandle(hThread);
+
+	GMPAttached = true;
+	return true;
+}
+
 // Tracks whether SystemPack has been attached
 bool SystemPackAttached = false;
 
@@ -105,6 +153,7 @@ bool AttachSystemPack()
 LPSTR WINAPI MyGetCommandLineA()
 {
 	AttachSystemPack();
+	AttachGMP();
 	return GetCommandLineA();
 }
 
